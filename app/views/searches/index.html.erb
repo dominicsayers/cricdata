@@ -1,0 +1,27 @@
+<h1>Listing searches</h1>
+
+<table>
+  <tr>
+    <th>Occasion</th>
+    <th>Maxpage</th>
+    <th>Games</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @searches.each do |search| %>
+  <tr>
+    <td><%= search.occasion %></td>
+    <td><%= search.maxpage %></td>
+    <td><%= search.games %></td>
+    <td><%= link_to 'Show', search %></td>
+    <td><%= link_to 'Edit', edit_search_path(search) %></td>
+    <td><%= link_to 'Destroy', search, confirm: 'Are you sure?', method: :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Search', new_search_path %>

@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  occasion: 2011-11-11 19:08:00
+  maxpage: 1
+  games: 
+
+two:
+  occasion: 2011-11-11 19:08:00
+  maxpage: 1
+  games: 
