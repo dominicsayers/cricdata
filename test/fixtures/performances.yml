@@ -1,0 +1,37 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  match_id: 1
+  innings: 1
+  player_id: 1
+  runs: 1
+  minutes: 1
+  balls: 1
+  fours: 1
+  sizes: 1
+  strikerate: 1
+  howout: MyString
+  overs: 1
+  oddballs: 1
+  maidens: 1
+  runsconceded: 1
+  wickets: 1
+  extras: MyString
+
+two:
+  match_id: 1
+  innings: 1
+  player_id: 1
+  runs: 1
+  minutes: 1
+  balls: 1
+  fours: 1
+  sizes: 1
+  strikerate: 1
+  howout: MyString
+  overs: 1
+  oddballs: 1
+  maidens: 1
+  runsconceded: 1
+  wickets: 1
+  extras: MyString

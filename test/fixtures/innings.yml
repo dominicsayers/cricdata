@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  match_id: 1
+  innings: 1
+  extras: 1
+  extras_analysis: MyString
+  summary: MyString
+
+two:
+  match_id: 1
+  innings: 1
+  extras: 1
+  extras_analysis: MyString
+  summary: MyString
