@@ -18,3 +18,9 @@ task :parse_next_match => :environment do
     Match.parse_next
     dputs "done."
 end
+
+task :parse_all_matches => :environment do
+    dputs "Parsing all unparsed matches..."
+    Match.parse_all
+    dputs "done."
+end

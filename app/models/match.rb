@@ -20,8 +20,8 @@ class Match
 
   # Helpers
   def self::update_performance pf
-dputs pf.inspect # debug
     return unless pf.has_key? :id
+dputs pf.inspect # debug
 
     inning = @match.innings.find_or_create_by(inning_number: @inning)
 
@@ -81,6 +81,9 @@ dputs pf.inspect # debug
   def self::parse_next
     # Find next unparsed match and parse it
     @match           = self::unparsed.first
+
+    return false if @match.nil?
+
     match_id         = @match.match_id
 
     # Add any new matches on this page
@@ -177,6 +180,16 @@ dputs ground_name # debug
     @match.match_type = match_type
     @match.ground     = ground
     @match.serial     = match_serial
+    @match.parsed     = true
     @match.save
+
+    return true
+  end
+
+  def self::parse_all
+    # Parse all unparsed matches
+    loop do
+      break unless parse_next
+    end
   end
 end
