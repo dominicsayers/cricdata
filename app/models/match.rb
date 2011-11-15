@@ -100,7 +100,7 @@ dputs pf.inspect # debug
     text_to_a       = text.split(' no. ')
     type_name       = text_to_a.first
     match_serial    = text_to_a.last
-dputs text # debug
+dputs text, :white # debug
 
     # Ground
     href            = '/ci/content/ground/'
@@ -109,7 +109,7 @@ dputs text # debug
     href            = ground_node.attributes['href'].value
     ground_name     = ground_node.children.first.content
     ground_id       = href[href_len..-1].split('.').first
-dputs ground_name # debug
+dputs ground_name, :white # debug
 
     # Innings
     inning_nodeset = doc.xpath("//tr[@class='inningsRow']/td")
