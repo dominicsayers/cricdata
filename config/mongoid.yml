@@ -1,6 +1,8 @@
 development:
-  host: localhost
-  database: cricdata_development
+  host: burdett.moo.li
+  port: 27017
+#  host: localhost
+#  database: cricdata_development
 
 test:
   host: localhost
@@ -8,9 +10,9 @@ test:
 
 # set these environment variables on your prod server
 production:
-  uri: <%= ENV['MONGOHQ_URL'] %>
-#  host: <%= ENV['MONGOID_HOST'] %>
-#  port: <%= ENV['MONGOID_PORT'] %>
+#  uri: <%= ENV['MONGOHQ_URL'] %>
+  host: burdett.moo.li
+  port: 27017
 #  username: <%= ENV['MONGOID_USERNAME'] %>
 #  password: <%= ENV['MONGOID_PASSWORD'] %>
 #  database: <%= ENV['MONGOID_DATABASE'] %>

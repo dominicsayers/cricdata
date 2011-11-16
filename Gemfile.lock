@@ -111,7 +111,7 @@ GEM
     turn (0.8.3)
       ansi
     tzinfo (0.3.31)
-    uglifier (1.0.4)
+    uglifier (1.1.0)
       execjs (>= 0.3.0)
       multi_json (>= 1.0.2)
 
@@ -121,11 +121,13 @@ PLATFORMS
 DEPENDENCIES
   bson_ext
   coffee-rails (~> 3.1.1)
+  execjs
   jquery-rails
   modernizr-rails
   mongoid
   nokogiri
-  rails (= 3.1.1)
+  rails
   sass-rails (~> 3.1.4)
+  therubyracer
   turn
   uglifier (>= 1.0.3)

@@ -1,10 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'rails', '3.1.1'
-
-# Bundle edge Rails instead:
-# gem 'rails',     :git => 'git://github.com/rails/rails.git'
-
+gem 'rails'
 gem 'mongoid'
 gem 'bson_ext'
 gem 'nokogiri'
@@ -15,6 +11,12 @@ group :assets do
   gem 'sass-rails',   '~> 3.1.4'
   gem 'coffee-rails', '~> 3.1.1'
   gem 'uglifier', '>= 1.0.3'
+end
+
+# Needed only for non-Windows environments
+platform :ruby do
+  gem 'execjs'
+  gem 'therubyracer'
 end
 
 # JavasScript libs
