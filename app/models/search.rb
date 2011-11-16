@@ -32,7 +32,7 @@ class Search
 
   def self::new_matches
     # What was the last page we found last time?
-    lastpage = Settings.get(:lastpage)
+    lastpage = Integer(Settings.get(:lastpage))
     lastpage ||= 1
 
     # Inspect this & subsequent pages

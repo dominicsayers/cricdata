@@ -1,7 +1,5 @@
 development:
-  host: burdett.moo.li
-  port: 27017
-#  host: localhost
+  host: localhost
   database: cricdata_development
 
 test:

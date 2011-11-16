@@ -35,8 +35,9 @@ dputs pf.inspect # debug
       end
     else
       # Make sure player exists
-      player = Player.find_or_create_by(player_id: pf[:id])
-      player.name = pf[:name]
+      player        = Player.find_or_create_by(player_id: pf[:id])
+      player.name   = pf[:name]
+      player.dirty  = true
       player.save
 
       performance = inning.performances.find_or_create_by(player_id: pf[:id])
