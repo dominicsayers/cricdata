@@ -27,6 +27,7 @@ class Performance
   field :cum_economy,     :type => Float
 
   key :inning_id, :player_id
+  index([ [:inning_id, Mongo::ASCENDING], [:player_id, Mongo::ASCENDING] ], unique: true)
 
   # Validations
 

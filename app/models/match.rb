@@ -7,6 +7,7 @@ class Match
   field :serial,      :type => Integer
 
   key :match_id
+  index :match_id, unique: true
 
   # Validations
 
@@ -87,8 +88,15 @@ dputs pf.inspect # debug
     match_id         = @match.match_id
 
     # Get match data
-    url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_id
-    doc             = get_data url
+    raw_match       = RawMatch.find_or_create_by(match_id: match_id)
+
+    if raw_match.html.blank?
+      url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_id
+      raw_match.html  = get_response url
+      raw_match.save
+    end
+
+    doc             = Nokogiri::HTML raw_match.html
 
     # Match type & serial number
     href            = '/ci/engine/records/index.html?class='

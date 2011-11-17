@@ -31,11 +31,14 @@ class Player
   field :bowl_strikerate, :type => Float
 
   key :player_id
+  index :player_id, unique: true
 
   # Validations
 
   # Scopes
   scope :dirty, where(dirty: true)
+  scope :clean, where(dirty: false)
+  scope :indeterminate, where(:dirty.exists => false)
 
   # Relationships
   has_many :performances
@@ -169,6 +172,14 @@ dputs player.inspect # debug
 
   def self::mark_all_dirty
     self::all.each do |player|
+      player.dirty = true
+dputs player.inspect # debug
+      player.save
+    end
+  end
+
+  def self::mark_indeterminate_dirty
+    self::indeterminate.each do |player|
       player.dirty = true
 dputs player.inspect # debug
       player.save
