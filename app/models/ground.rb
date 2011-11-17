@@ -2,10 +2,10 @@ class Ground
   include Mongoid::Document
 
   # Fields
-  field :ground_id, :type => Integer
+  field :ground_ref, :type => Integer
   field :name, :type => String
 
-  key :ground_id
+  key :ground_ref
 
   # Validations
 

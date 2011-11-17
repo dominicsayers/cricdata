@@ -3,8 +3,8 @@ class RawMatch
   include Mongoid::Document
 
   # Fields
-  field :match_id, :type => Integer
+  field :match_ref, :type => Integer
   field :html, :type => String
 
-  key :match_id
+  key :match_ref
 end

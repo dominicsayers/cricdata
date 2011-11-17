@@ -7,6 +7,12 @@ include Fetch
 
 desc "These tasks are run manually for admin purposes"
 
+#-task :create_sample => :environment do
+#-    dputs 'Creating sample player...'
+#-    Player.create_sample
+#-    dputs 'done.'
+#-end
+
 task :mark_all_players_dirty => :environment do
     dputs 'Marking all players as dirty...'
     Player.mark_all_dirty
@@ -19,9 +25,22 @@ task :mark_indeterminate_players_dirty => :environment do
     dputs 'done.'
 end
 
-task :parse_match, [:match_id] => [:environment] do |t, args|
-    match_id = (args.match_id || "0")
-    dputs "Parsing #{match_id}..."
-    Match.parse match_id
+task :update_player, [:player_ref] => [:environment] do |t, args|
+    player_ref = (args.player_ref || "0")
+    dputs "Parsing #{player_ref}..."
+    Player.update player_ref
+    dputs 'done.'
+end
+
+task :mark_all_matches_unparsed => :environment do
+    dputs 'Marking all matches as unparsed...'
+    Match.mark_all_unparsed
+    dputs 'done.'
+end
+
+task :parse_match, [:match_ref] => [:environment] do |t, args|
+    match_ref = (args.match_ref || "0")
+    dputs "Parsing #{match_ref}..."
+    Match.parse match_ref
     dputs 'done.'
 end

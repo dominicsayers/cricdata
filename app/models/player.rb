@@ -3,11 +3,14 @@ class Player
 
   # Fields
   # Basic
-  field :player_id,       :type => Integer
+  field :type_number,     :type => Integer
+  field :player_ref,      :type => Integer
   field :name,            :type => String
   field :dirty,           :type => Boolean
 
   # Stats
+  field :matchcount,      :type => Integer
+
   # Batting
   field :innings,         :type => Integer
   field :completed,       :type => Integer
@@ -30,8 +33,16 @@ class Player
   field :bowl_average,    :type => Float
   field :bowl_strikerate, :type => Float
 
-  key :player_id
-  index :player_id, unique: true
+  # Fielding
+  field :dismissals,      :type => Integer
+  field :catches_total,   :type => Integer
+  field :stumpings,       :type => Integer
+  field :catches_wkt,     :type => Integer
+  field :catches,         :type => Integer # Not as a wicketkeeper
+
+  key :type_number, :player_ref
+  index [ [:player_ref, Mongo::ASCENDING], [:type_number, Mongo::ASCENDING] ], unique: true
+  index [ [:type_number, Mongo::ASCENDING], [:player_ref, Mongo::ASCENDING] ], unique: true
 
   # Validations
 
@@ -44,129 +55,220 @@ class Player
   has_many :performances
 
   # Helpers
+  # Get history of fielding performances
+  def self::get_fielding_statistics player
+    player_id     = player._id
+    player_ref    = player.player_ref
+
+    # Get fielding data
+    url     = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, player.type_number]
+    doc     = get_data url
+    nodeset = doc.xpath('//tr[@class="data1"]')
+
+    if nodeset.length == 0
+      return false # page not found
+    else
+      nodeset.each do |node|
+        subnodes        = node.xpath('td')
+        href            = '/ci/engine/match/'
+        href_len        = href.length
+        match_node      = subnodes[10].xpath("a[substring(@href,1,#{href_len})='#{href}']").first
+#-dputs match_node.inspect, :pink # debug
+        # There's a summary row that has no match ref
+        if match_node.nil?
+          # But we can get the number of matches played from this
+          player.matchcount = subnodes[2].children.first.content
+          player.save
+        else
+          href            = match_node.attributes['href'].value
+          match_ref       = href[href_len..-1].split('.').first
+          match           = Match.where(match_ref:match_ref).first
+          inning_number   = subnodes[5].children.first.content
+          inning          = match.innings.find_or_create_by inning_number: inning_number
+          performance     = inning.performances.find_or_create_by player_id: player_id
+
+          performance.dismissals    = subnodes[0].children.first.content
+          performance.catches_total = subnodes[1].children.first.content
+          performance.stumpings     = subnodes[2].children.first.content
+          performance.catches_wkt   = subnodes[3].children.first.content
+          performance.catches       = subnodes[4].children.first.content
+          performance.save
+        end
+      end
+    end
+  end
+
+  # Update cumulative statistics from performance data
+  def self::update_statistics player
+    # Get fielding statistics
+    self::get_fielding_statistics player
+
+    # Process performance data
+    player_id     = player._id
+dputs "#{player.name} (#{player_id})", :white # debug
+
+    performances  = Performance.where(player_id: player_id)
+
+    # Batting stats
+    innings         = 0
+    completed       = 0
+    runs            = 0
+    minutes         = 0
+    balls           = 0
+    fours           = 0
+    sixes           = 0
+    bat_average     = 0.0
+    bat_strikerate  = 0.0
+
+    # Bowling stats
+    overs           = 0
+    overs_float     = 0.0
+    overs_string    = ''
+    ballsdelivered  = 0
+    oddballs        = 0
+    maidens         = 0
+    runsconceded    = 0
+    wickets         = 0
+    bowl_average    = 0.0
+    bowl_strikerate = 0.0
+    economy         = 0.0
+
+    # Fielding stats
+    dismissals      = 0
+    catches_total   = 0
+    stumpings       = 0
+    catches_wkt     = 0
+    catches         = 0
+
+    # Examine performances
+    performances.each do |pf|
+      # Batting stats
+      unless pf.runs.nil?
+        # Check fields
+        pf.runs     = 0 unless pf.runs.is_a?(Numeric)
+        pf.sixes    = 0 unless pf.sixes.is_a?(Numeric) # DJ Bravo, performance 287853-1-51439
+        pf.notout   = pf[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
+
+        # Batting stats
+        innings     += 1
+        completed   += 1 unless pf.notout
+        runs        += pf.runs    || 0
+        minutes     += pf.minutes || 0
+        balls       += pf.balls   || 0
+        fours       += pf.fours   || 0
+        sixes       += pf.sixes   || 0
+
+        if completed > 0
+          bat_average = runs.to_f / completed.to_f
+          pf.average  = bat_average
+        end
+
+        if balls > 0
+          bat_strikerate    = 100 * runs.to_f / balls.to_f
+          pf.cum_strikerate = bat_strikerate
+        end
+      end
+
+      unless pf.overs.nil?
+        # Bowling stats
+        overs         += pf.overs
+        oddballs      += pf.oddballs
+        maidens       += pf.maidens
+        runsconceded  += pf.runsconceded
+        wickets       += pf.wickets
+
+        # Assume 6-ball overs for now
+        if pf.wickets > 0
+          pf.strikerate = (pf.oddballs + 6 * pf.overs).to_f / pf.wickets.to_f
+        end
+
+        # Parse overs and odd balls into useful numbers
+        ballsdelivered  = oddballs + (6 * overs)
+        remainder       = ballsdelivered % 6
+        overs_float     = ballsdelivered.to_f / 6
+        overs_string    = overs_float.floor.to_s
+        overs_string    += '.' + remainder.to_s unless remainder == 0
+
+        if wickets > 0
+          bowl_average      = runsconceded.to_f / wickets.to_f
+          pf.average        = bowl_average
+          bowl_strikerate   = ballsdelivered.to_f / wickets.to_f
+          pf.cum_strikerate = bowl_strikerate
+        end
+
+        if overs_float > 0
+          pf.cum_economy = runsconceded.to_f / overs_float
+        end
+      end
+
+      unless pf.dismissals.nil?
+        # Fielding stats
+        dismissals    += pf.dismissals
+        catches_total += pf.catches_total
+        stumpings     += pf.stumpings
+        catches_wkt   += pf.catches_wkt
+        catches       += pf.catches
+      end
+
+#-dputs pf.inspect # debug
+      pf.save
+    end
+
+    # Overall batting
+    player.innings          = innings
+    player.completed        = completed
+    player.runs             = runs
+    player.minutes          = minutes
+    player.balls            = balls
+    player.fours            = fours
+    player.sixes            = sixes
+    player.bat_average      = bat_average     if completed > 0
+    player.bat_strikerate   = bat_strikerate  if balls > 0
+
+    # Rationalise overs and odd balls
+    if ballsdelivered > 0
+      overs     = (ballsdelivered / 6).floor.to_i
+      oddballs  = ballsdelivered % 6
+    end
+
+    # Overall bowling
+    player.overs            = overs
+    player.oddballs         = oddballs
+    player.overs_string     = overs_string
+    player.maidens          = maidens
+    player.runsconceded     = runsconceded
+    player.wickets          = wickets
+    player.bowl_average     = bowl_average                    if wickets > 0
+    player.bowl_strikerate  = bowl_strikerate                 if wickets > 0
+    player.economy          = runsconceded.to_f / overs_float if overs_float > 0
+
+    # Overall fielding
+    player.dismissals       = dismissals
+    player.catches_total    = catches_total
+    player.stumpings        = stumpings
+    player.catches_wkt      = catches_wkt
+    player.catches          = catches
+
+    # Control
+    player.dirty            = false
+dputs player.inspect # debug
+    player.save
+  end
+
   def self::update_dirty_players
     # Recompile aggregate stats for players with
     # new performance information
     self::dirty.each do |player|
-      player_id     = player.player_id
-dputs "#{player.name} (#{player_id})", :white # debug
+      update_statistics player
+    end
+  end
 
-      performances  = Performance.where(player_id: player_id.to_s)
+  def self::update player_ref
+    player_list = self::where player_ref:player_ref
 
-      # Batting stats
-      innings         = 0
-      completed       = 0
-      runs            = 0
-      minutes         = 0
-      balls           = 0
-      fours           = 0
-      sixes           = 0
-      bat_average     = 0.0
-      bat_strikerate  = 0.0
-
-      # Bowling stats
-      overs           = 0
-      overs_float     = 0.0
-      overs_string    = ''
-      ballsdelivered  = 0
-      oddballs        = 0
-      maidens         = 0
-      runsconceded    = 0
-      wickets         = 0
-      bowl_average    = 0.0
-      bowl_strikerate = 0.0
-      economy         = 0.0
-
-      # Examine performances
-      performances.each do |pf|
-        if pf.overs.nil?
-          # Batting stats
-          innings     += 1
-          completed   += 1 unless pf.notout
-          runs        += pf.runs
-          minutes     += pf.minutes
-          balls       += pf.balls
-          fours       += pf.fours
-          sixes       += pf.sixes
-
-          if completed > 0
-            bat_average = runs / completed
-            pf.average  = bat_average
-          end
-
-          if balls > 0
-            bat_strikerate    = 100 * runs / balls
-            pf.cum_strikerate = bat_strikerate
-          end
-        else
-          # Bowling stats
-          overs         += pf.overs
-          oddballs      += pf.oddballs
-          maidens       += pf.maidens
-          runsconceded  += pf.runsconceded
-          wickets       += pf.wickets
-
-          # Assume 6-ball overs for now
-          if pf.wickets > 0
-            pf.strikerate = (pf.oddballs + 6 * pf.overs) / pf.wickets
-          end
-
-          # Parse overs and odd balls into useful numbers
-          ballsdelivered  = oddballs + (6 * overs)
-          remainder       = ballsdelivered % 6
-          overs_float     = ballsdelivered / 6
-          overs_string    = overs_float.floor.to_s
-          overs_string    += '.' + remainder.to_s if remainder
-
-          if wickets > 0
-            bowl_average      = runs / wickets
-            pf.average        = bowl_average
-            bowl_strikerate   = ballsdelivered / wickets
-            pf.cum_strikerate = bowl_strikerate
-          end
-
-          if overs_float > 0
-            pf.cum_economy = runsconceded / overs_float
-          end
-        end
-dputs pf.inspect # debug
-        pf.save
-#-dputs player.bat_average, :cyan # debug
-#-dputs bat_average, :pink # debug
-      end
-
-      # Overall batting
-      player.innings          = innings
-      player.completed        = completed
-      player.runs             = runs
-      player.minutes          = minutes
-      player.balls            = balls
-      player.fours            = fours
-      player.sixes            = sixes
-      player.bat_average      = bat_average     if completed > 0
-      player.bat_strikerate   = bat_strikerate  if balls > 0
-
-      # Rationalise overs and odd balls
-      if ballsdelivered > 0
-        overs     = (ballsdelivered / 6).floor.to_i
-        oddballs  = ballsdelivered % 6
-      end
-
-      # Overall bowling
-      player.overs            = overs
-      player.oddballs         = oddballs
-      player.overs_string     = overs_string
-      player.maidens          = maidens
-      player.runsconceded     = runsconceded
-      player.wickets          = wickets
-      player.bowl_average     = bowl_average                if wickets > 0
-      player.bowl_strikerate  = bowl_strikerate             if wickets > 0
-      player.economy          = runsconceded / overs_float  if overs_float > 0
-
-      # Control
-      player.dirty            = false
+    player_list.each do |player|
 dputs player.inspect # debug
-      player.save
+      update_statistics player unless player.nil?
     end
   end
 
@@ -185,4 +287,12 @@ dputs player.inspect # debug
       player.save
     end
   end
+
+#-  def self::create_sample
+#-    player = self::create(type_number:1, player_ref:12346)
+#-    dputs player.inspect, :white
+#-    player.save
+#-    player2 = self::where(type_number:1, player_ref:12346).first
+#-    dputs player2.inspect, :cyan
+#-  end
 end

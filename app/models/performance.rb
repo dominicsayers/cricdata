@@ -21,13 +21,20 @@ class Performance
   field :economy,         :type => Float
   field :extras,          :type => String
 
+  # Fielding
+  field :dismissals,      :type => Integer
+  field :catches_total,   :type => Integer
+  field :stumpings,       :type => Integer
+  field :catches_wkt,     :type => Integer
+  field :catches,         :type => Integer # Not as a wicketkeeper
+
   # Cumulative
   field :average,         :type => Float
   field :cum_strikerate,  :type => Float
   field :cum_economy,     :type => Float
 
-  key :inning_id, :player_id
   index([ [:inning_id, Mongo::ASCENDING], [:player_id, Mongo::ASCENDING] ], unique: true)
+  index([ [:player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
 
   # Validations
 

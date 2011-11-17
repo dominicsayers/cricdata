@@ -21,9 +21,15 @@ class Search
       return false # page not found
     else
       nodeset.each do |node|
-        match_href  = node.attributes['href'].value
-        match_id    = match_href.split('/').last.split('.').first
-        match       = Match.find_or_create_by(match_id: match_id)
+        match_href    = node.attributes['href'].value
+        match_ref     = match_href.split('/').last.split('.').first
+        match         = Match.find_or_create_by match_ref: match_ref
+        match.parsed  = false if match.parsed.nil?
+        match.save
+
+        break unless match.persisted?
+
+        @search.games << match_ref unless @search.nil?
       end
 
       return true # page found
@@ -31,6 +37,8 @@ class Search
   end
 
   def self::new_matches
+    @search = self::create occasion:Time.now, games:[]
+
     # What was the last page we found last time?
     lastpage = (Settings.get(:lastpage) || 1).to_i
 
@@ -44,5 +52,7 @@ class Search
 
     # Wrap up
     Settings.set(:lastpage, lastpage)
+    @search.maxpage = lastpage
+    @search.save
   end
 end

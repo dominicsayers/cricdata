@@ -2,12 +2,12 @@ class Match
   include Mongoid::Document
 
   # Fields
-  field :match_id,    :type => String
+  field :match_ref,   :type => String
   field :parsed,      :type => Boolean
   field :serial,      :type => Integer
 
-  key :match_id
-  index :match_id, unique: true
+  key :match_ref
+  index :match_ref, unique: true
 
   # Validations
 
@@ -21,12 +21,12 @@ class Match
 
   # Helpers
   def self::update_performance pf
-    return unless pf.has_key? :id
+    return unless pf.has_key? :ref
 dputs pf.inspect # debug
 
-    inning = @match.innings.find_or_create_by(inning_number: @inning)
+    inning = @match.innings.find_or_create_by inning_number: @inning
 
-    if pf[:id] == 0
+    if pf[:ref] == 0
       # Record innings analysis
       if pf[:name].downcase == 'extras'
         inning.extras          = pf[:runs]
@@ -36,12 +36,12 @@ dputs pf.inspect # debug
       end
     else
       # Make sure player exists
-      player        = Player.find_or_create_by(player_id: pf[:id])
+      player        = Player.find_or_create_by type_number:@match.match_type.type_number, player_ref:pf[:ref]
       player.name   = pf[:name]
       player.dirty  = true
       player.save
 
-      performance = inning.performances.find_or_create_by(player_id: pf[:id])
+      performance = inning.performances.find_or_create_by player_id: player._id
 
       if pf[:bowling].length == 0
         # Record batting analysis
@@ -52,7 +52,7 @@ dputs pf.inspect # debug
         performance.sixes         = pf[:batting][3]
         performance.strikerate    = pf[:batting][4]
         performance.howout        = pf[:howout]
-        performance.notout        = pf[:howout].downcase == 'not out'
+        performance.notout        = pf[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
       else
         # Record bowling analysis
         overs = pf[:bowling][0]
@@ -80,18 +80,18 @@ dputs pf.inspect # debug
     inning.save
   end
 
-  def self::parse match_id=0
-    @match = self::where(match_id: match_id.to_s).first unless match_id == 0
+  def self::parse match_ref=0
+    @match = self::where(match_ref: match_ref.to_s).first unless match_ref == 0
 
     return false if @match.nil?
 
-    match_id         = @match.match_id
+    match_ref         = @match.match_ref
 
     # Get match data
-    raw_match       = RawMatch.find_or_create_by(match_id: match_id)
+    raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
 
     if raw_match.html.blank?
-      url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_id
+      url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
       raw_match.html  = get_response url
       raw_match.save
     end
@@ -104,11 +104,16 @@ dputs pf.inspect # debug
     type_node       = doc.xpath("//a[substring(@href,1,#{href_len})='#{href}']").first
     href            = type_node.attributes['href'].value
     text            = type_node.children.first.content
-    type_id         = href[href_len..-1]
+    type_number     = href[href_len..-1].to_i
     text_to_a       = text.split(' no. ')
     type_name       = text_to_a.first
     match_serial    = text_to_a.last
 dputs text, :white # debug
+
+    # Match type - update collection
+    match_type        = MatchType.find_or_create_by(type_number: type_number)
+    match_type.name   = type_name
+    match_type.save
 
     # Ground
     href            = '/ci/content/ground/'
@@ -116,8 +121,18 @@ dputs text, :white # debug
     ground_node     = doc.xpath("//a[substring(@href,1,#{href_len})='#{href}']").first
     href            = ground_node.attributes['href'].value
     ground_name     = ground_node.children.first.content
-    ground_id       = href[href_len..-1].split('.').first
+    ground_ref      = href[href_len..-1].split('.').first
 dputs ground_name, :white # debug
+
+    # Ground - update collection
+    ground            = Ground.find_or_create_by(ground_ref: ground_ref)
+    ground.name       = ground_name
+    ground.save
+
+    # Match details
+    @match.match_type = match_type
+    @match.ground     = ground
+    @match.serial     = match_serial
 
     # Innings
     inning_nodeset = doc.xpath("//tr[@class='inningsRow']/td")
@@ -143,7 +158,7 @@ dputs ground_name, :white # debug
         href_len    = href.length
         href        = player_node.attributes['href'].value
         pf[:name]   = player_node.children.first.content
-        pf[:id]     = href[href_len..-1].split('.').first
+        pf[:ref]    = href[href_len..-1].split('.').first
       when :inningsDetails
         # Innings summary, so save the previous player
         update_performance pf
@@ -151,7 +166,7 @@ dputs ground_name, :white # debug
         pf          = { :batting => [], :bowling => [] } # Clear down for next player
 
         pf[:name]   = text
-        pf[:id]     = 0
+        pf[:ref]    = 0
       when :battingDismissal
         if parsing_bowling
           # When we go from bowling performances to batting, that's the start of the next innings
@@ -174,21 +189,7 @@ dputs ground_name, :white # debug
     update_performance pf
 
     # Wrap up
-    # Match type
-    match_type        = MatchType.find_or_create_by(type_id: type_id)
-    match_type.name   = type_name
-    match_type.save
-
-    # Ground
-    ground            = Ground.find_or_create_by(ground_id: ground_id)
-    ground.name       = ground_name
-    ground.save
-
-    # Match
-    @match.match_type = match_type
-    @match.ground     = ground
-    @match.serial     = match_serial
-    @match.parsed     = true
+    @match.parsed = true
     @match.save
 
     return true
@@ -204,6 +205,14 @@ dputs ground_name, :white # debug
     # Parse all unparsed matches
     loop do
       break unless parse_next
+    end
+  end
+
+  def self::mark_all_unparsed
+    self::where(:parsed.ne => false).each do |match|
+      match.parsed = false
+dputs match.inspect # debug
+      match.save
     end
   end
 end
