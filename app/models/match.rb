@@ -79,16 +79,15 @@ dputs pf.inspect # debug
     inning.save
   end
 
-  def self::parse_next
-    # Find next unparsed match and parse it
-    @match           = self::unparsed.first
+  def self::parse match_id=0
+    @match = self::where(match_id: match_id.to_s).first unless match_id == 0
 
     return false if @match.nil?
 
     match_id         = @match.match_id
 
-    # Add any new matches on this page
-    url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json' % match_id
+    # Get match data
+    url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_id
     doc             = get_data url
 
     # Match type & serial number
@@ -185,6 +184,12 @@ dputs ground_name, :white # debug
     @match.save
 
     return true
+  end
+
+  def self::parse_next
+    # Find next unparsed match and parse it
+    @match = self::unparsed.first
+    self::parse
   end
 
   def self::parse_all
