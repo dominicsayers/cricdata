@@ -7,6 +7,35 @@ include Fetch
 
 desc "This task is run to upgrade the schema from v0 to v0"
 
+task :play => :environment do
+    dputs 'Playing...'
+
+    $\ = ' '
+
+    # Performances
+    dputs 'Performances', :white
+
+    Performance.find(:all, :conditions => {:player_id => /^.[0-9].+/i}).each do |pf|
+			inning			= pf.inning
+			match 			= inning.match
+
+			dprint pf._id, :cyan
+
+			hsh						= ActiveSupport::JSON.decode(pf.to_json)
+			hsh.delete '_id'
+
+			pf2						= Performance.new(hsh)
+			pf2.player_id	= "#{match.match_type_id}-#{pf.player_id}"
+#			pf2.save
+
+			dprint pf2._id
+
+#			pf.destroy
+    end
+
+    dputs "\r\nend\r\n", :white
+end
+
 task :migrate_v0 => :environment do
     dputs 'Migrating...'
 
@@ -21,19 +50,23 @@ task :migrate_v0 => :environment do
     # Performances
     dputs 'Performances', :white
 
-#    Performances.where(:player_id.exists => true).each do |player|
-#      player.player_ref = player._id
-#      dprint player.name, :cyan
-#
-#      MatchType.all.each do |match_type|
-#				new_player				= Player.find_or_create_by type_number:match_type.type_number, player_ref:player._id
-#				new_player.name		= player.name
-#				new_player.dirty	= player.dirty
-#				new_player.save
-#      end
-#
-#      player.destroy
-#    end
+    Performance.find(:all, :conditions => {:player_id => /^.[0-9].+/i}).each do |pf|
+			inning			= pf.inning
+			match 			= inning.match
+
+			dprint pf._id, :cyan
+
+			hsh						= ActiveSupport::JSON.decode(pf.to_json)
+			hsh.delete '_id'
+
+			pf2						= Performance.new(hsh)
+			pf2.player_id	= "#{match.match_type_id}-#{pf.player_id}"
+			pf2.save
+
+			dprint pf2._id
+
+			pf.destroy
+    end
 
     dputs "\r\nend\r\n", :white
 

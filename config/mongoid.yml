@@ -3,8 +3,8 @@ development:
   database: cricdata_development
 
 test:
-  host: localhost
-  database: cricdata_test
+  host: 21w.moo.li
+  database: cricdata
 
 # set these environment variables on your prod server
 production:
