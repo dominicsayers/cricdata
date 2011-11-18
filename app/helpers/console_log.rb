@@ -1,17 +1,27 @@
 module ConsoleLog
-  def dputs message, color=:yellow
+  def ansi color
     case color.to_sym
-    when :gray    ; ansi = 30
-    when :red     ; ansi = 31
-    when :green   ; ansi = 32
-    when :yellow  ; ansi = 33
-    when :blue    ; ansi = 34
-    when :pink    ; ansi = 35
-    when :cyan    ; ansi = 36
-    when :white   ; ansi = 37
-    else          ; ansi = 35
+    when :gray    ; 30
+    when :red     ; 31
+    when :green   ; 32
+    when :yellow  ; 33
+    when :blue    ; 34
+    when :pink    ; 35
+    when :cyan    ; 36
+    when :white   ; 37
+    else          ; 35
     end
+  end
 
-    puts "\e[#{ansi};1m#{message}\e[32;1m"
+  def dputs message, color=:yellow
+    puts "\e[#{ansi color};1m#{message}\e[32;1m"
+  end
+
+  def dp message, color=:yellow
+    p "\e[#{ansi color};1m#{message}\e[32;1m"
+  end
+
+  def dprint message, color=:yellow
+    print "\e[#{ansi color};1m#{message}\e[32;1m"
   end
 end
