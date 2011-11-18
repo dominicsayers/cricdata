@@ -48,18 +48,22 @@ dprint match_ref # debug
   end
 end
 
-task :deflate_raw_matches => :environment do
+task :deflate_raw_match => :environment do
     $\ = ' '
 
-  RawMatch.all.each do |raw_match|
-    zhtml = Zlib::Deflate.deflate(raw_match.html)
-dp "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
-  end
+  raw_match = RawMatch.first
+  zhtml = Zlib::Deflate.deflate(raw_match.html)
+dp zhtml, :pink # debug
+dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+  raw_match.zhtml = BSON::Binary.new(zhtml)
+dp raw_match.zhtml, :cyan # debug
+  raw_match.save
 end
 
-task :inflate_raw_matches => :environment do
-  RawMatch.all.each do |raw_match|
-    html = Zlib::Inflate.inflate(BSON.deserialize(raw_match.zhtml))
-dp "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
-  end
+task :inflate_raw_match => :environment do
+  raw_match = RawMatch.first
+  zhtml = raw_match.zhtml.to_s
+  html = Zlib::Inflate.inflate(zhtml)
+dputs "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
+dputs html, :cyan
 end

@@ -98,7 +98,7 @@ dputs pf.inspect # debug
       raw_match.save
     end
 
-    doc = Nokogiri::HTML(Zlib::Inflate.inflate(raw_match.zhtml))
+    doc = Nokogiri::HTML(Zlib::Inflate.inflate(raw_match.zhtml.to_s))
 
     # Parse dates
     title = doc.xpath("//title").first.children.first.content

@@ -115,18 +115,18 @@ task :migrate_v0_match_dates => :environment do
     $\ = ' '
 
   Match.all.each do |match|
-    match_ref         = match.match_ref
+    match_ref   = match.match_ref
 dprint match_ref # debug
     # Get match data
-    raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+    raw_match   = RawMatch.find_or_create_by(match_ref: match_ref)
 
-    if raw_match.html.blank?
+    if raw_match.zhtml.blank?
       url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
-      raw_match.html  = get_response url
+      raw_match.zhtml  = BSON::Binary.new(Zlib::Deflate.deflate(get_response(url)))
       raw_match.save
     end
 
-    doc         = Nokogiri::HTML raw_match.html
+    doc = Nokogiri::HTML(Zlib::Inflate.inflate(raw_match.zhtml.to_s))
 
     # Parse dates
     title = doc.xpath("//title").first.children.first.content
@@ -156,10 +156,10 @@ end
 task :migrate_v0_deflate_raw_matches => :environment do
     $\ = ' '
 
-  RawMatch.all.each do |raw_match|
-    zhtml = BSON::Binary.new(Zlib::Deflate.deflate(raw_match.html))
+  RawMatch.where(:html.exists => true).each do |raw_match|
+    zhtml = Zlib::Deflate.deflate(raw_match.html)
 dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
-		raw_match.zhtml = zhtml
+		raw_match.zhtml = BSON::Binary.new(zhtml)
 		raw_match.unset :html
 		raw_match.save
   end
