@@ -7,35 +7,6 @@ include Fetch
 
 desc "This task is run to upgrade the schema from v0 to v0"
 
-task :play => :environment do
-    dputs 'Playing...'
-
-    $\ = ' '
-
-    # Performances
-    dputs 'Performances', :white
-
-    Performance.find(:all, :conditions => {:player_id => /^.[0-9].+/i}).each do |pf|
-			inning			= pf.inning
-			match 			= inning.match
-
-			dprint pf._id, :cyan
-
-			hsh						= ActiveSupport::JSON.decode(pf.to_json)
-			hsh.delete '_id'
-
-			pf2						= Performance.new(hsh)
-			pf2.player_id	= "#{match.match_type_id}-#{pf.player_id}"
-#			pf2.save
-
-			dprint pf2._id
-
-#			pf.destroy
-    end
-
-    dputs "\r\nend\r\n", :white
-end
-
 task :migrate_v0 => :environment do
     dputs 'Migrating...'
 
@@ -111,6 +82,8 @@ task :migrate_v0 => :environment do
       raw_match.save
     end
 
+    dputs "\r\nend\r\n", :white
+
     # Grounds
     dputs 'Grounds', :white
 
@@ -136,4 +109,58 @@ task :migrate_v0 => :environment do
     dputs "\r\nend\r\n", :white
 
     dputs 'done.'
+end
+
+task :migrate_v0_match_dates => :environment do
+    $\ = ' '
+
+  Match.all.each do |match|
+    match_ref         = match.match_ref
+dprint match_ref # debug
+    # Get match data
+    raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+
+    if raw_match.html.blank?
+      url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
+      raw_match.html  = get_response url
+      raw_match.save
+    end
+
+    doc         = Nokogiri::HTML raw_match.html
+
+    # Parse dates
+    title = doc.xpath("//title").first.children.first.content
+    /.+?,\s(\w{3})\s([0-9]{1,2})(?:,\s([0-9]+))*(?:\s*(?:-)*\s*(\w{3})*\s*([0-9]{1,2}),\s([0-9]+))*/i.match(title)
+
+    m1 = $1
+    d1 = $2
+    y1 = $3
+    m2 = $4
+    d2 = $5
+    y2 = $6
+
+    y1 = y2 if y1.blank?
+    m2 = m1 if m2.blank?
+    d2 = d1 if d2.blank?
+    y2 = y1 if y2.blank?
+
+    m1n = Date::ABBR_MONTHNAMES.index(m1)
+    m2n = Date::ABBR_MONTHNAMES.index(m2)
+
+    match.date_start  = Date.new(y1.to_i, m1n, d1.to_i)
+    match.date_end    = Date.new(y2.to_i, m2n, d2.to_i)
+    match.save
+  end
+end
+
+task :migrate_v0_deflate_raw_matches => :environment do
+    $\ = ' '
+
+  RawMatch.all.each do |raw_match|
+    zhtml = BSON::Binary.new(Zlib::Deflate.deflate(raw_match.html))
+dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+		raw_match.zhtml = zhtml
+		raw_match.unset :html
+		raw_match.save
+  end
 end

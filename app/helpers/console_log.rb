@@ -18,7 +18,9 @@ module ConsoleLog
   end
 
   def dp message, color=:yellow
-    p "\e[#{ansi color};1m#{message}\e[32;1m"
+    print "\e[#{ansi color};1m"
+    p message
+    print "\e[32;1m"
   end
 
   def dprint message, color=:yellow

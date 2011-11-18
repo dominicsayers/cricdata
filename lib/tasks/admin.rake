@@ -7,21 +7,27 @@ include Fetch
 
 desc "These tasks are run manually for admin purposes"
 
-#-task :create_sample => :environment do
-#-    dputs 'Creating sample player...'
-#-    Player.create_sample
-#-    dputs 'done.'
-#-end
-
 task :mark_all_players_dirty => :environment do
     dputs 'Marking all players as dirty...'
-    Player.mark_all_dirty
+
+    Player.all.each do |player|
+      player.dirty = true
+dputs player.inspect # debug
+      player.save
+    end
+
     dputs 'done.'
 end
 
 task :mark_indeterminate_players_dirty => :environment do
     dputs 'Marking all indeterminate players as dirty...'
-    Player.mark_indeterminate_dirty
+
+    Player.indeterminate.each do |player|
+      player.dirty = true
+dputs player.inspect # debug
+      player.save
+    end
+
     dputs 'done.'
 end
 

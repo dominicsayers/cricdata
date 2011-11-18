@@ -142,11 +142,12 @@ dputs "#{player.name} (#{player_id})", :white # debug
 
     # Examine performances
     performances.each do |pf|
+#-dp pf, :pink # debug
       # Batting stats
       unless pf.runs.nil?
         # Check fields
         pf.runs     = 0 unless pf.runs.is_a?(Numeric)
-        pf.sixes    = 0 unless pf.sixes.is_a?(Numeric) # DJ Bravo, performance 287853-1-51439
+        pf.sixes    = 0 unless pf.sixes.is_a?(Numeric) # DJ Bravo, match 287853
         pf.notout   = pf[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
 
         # Batting stats
@@ -157,6 +158,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
         balls       += pf.balls   || 0
         fours       += pf.fours   || 0
         sixes       += pf.sixes   || 0
+#-dprint 'batting', :cyan # debug
 
         if completed > 0
           bat_average = runs.to_f / completed.to_f
@@ -170,6 +172,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
       end
 
       unless pf.overs.nil?
+#-dprint '-bowling', :cyan # debug
         # Bowling stats
         overs         += pf.overs
         oddballs      += pf.oddballs
@@ -202,17 +205,22 @@ dputs "#{player.name} (#{player_id})", :white # debug
       end
 
       unless pf.dismissals.nil?
+#-dprint '-fielding', :cyan # debug
         # Fielding stats
-        dismissals    += pf.dismissals
-        catches_total += pf.catches_total
-        stumpings     += pf.stumpings
-        catches_wkt   += pf.catches_wkt
-        catches       += pf.catches
+        if pf.dismissals.is_a?(Numeric) # Can be 'TDNF' if player did not take field
+          dismissals    += pf.dismissals
+          catches_total += pf.catches_total
+          stumpings     += pf.stumpings
+          catches_wkt   += pf.catches_wkt
+          catches       += pf.catches
+        end
       end
 
 #-dputs pf.inspect # debug
       pf.save
     end
+
+#-dprint '-summary', :cyan # debug
 
     # Overall batting
     player.innings          = innings
@@ -224,6 +232,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
     player.sixes            = sixes
     player.bat_average      = bat_average     if completed > 0
     player.bat_strikerate   = bat_strikerate  if balls > 0
+#-dprint '-batting2', :cyan # debug
 
     # Rationalise overs and odd balls
     if ballsdelivered > 0
@@ -241,6 +250,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
     player.bowl_average     = bowl_average                    if wickets > 0
     player.bowl_strikerate  = bowl_strikerate                 if wickets > 0
     player.economy          = runsconceded.to_f / overs_float if overs_float > 0
+#-dprint '-bowling2', :cyan # debug
 
     # Overall fielding
     player.dismissals       = dismissals
@@ -248,6 +258,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
     player.stumpings        = stumpings
     player.catches_wkt      = catches_wkt
     player.catches          = catches
+#-dprint '-fielding2', :cyan # debug
 
     # Control
     player.dirty            = false
@@ -271,28 +282,4 @@ dputs player.inspect # debug
       update_statistics player unless player.nil?
     end
   end
-
-  def self::mark_all_dirty
-    self::all.each do |player|
-      player.dirty = true
-dputs player.inspect # debug
-      player.save
-    end
-  end
-
-  def self::mark_indeterminate_dirty
-    self::indeterminate.each do |player|
-      player.dirty = true
-dputs player.inspect # debug
-      player.save
-    end
-  end
-
-#-  def self::create_sample
-#-    player = self::create(type_number:1, player_ref:12346)
-#-    dputs player.inspect, :white
-#-    player.save
-#-    player2 = self::where(type_number:1, player_ref:12346).first
-#-    dputs player2.inspect, :cyan
-#-  end
 end
