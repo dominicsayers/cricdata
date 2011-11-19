@@ -213,7 +213,7 @@ dputs ground_name, :white # debug
     update_performance pf
 
     # Wrap up
-    @match.parsed = true
+    @match.parsed = (@match.date_end < Date.today) # Only count completed matches as parsed
     @match.save
 
     return true
@@ -227,8 +227,9 @@ dputs ground_name, :white # debug
 
   def self::parse_all
     # Parse all unparsed matches
-    loop do
-      break unless parse_next
+    self::where(parsed:false).each do |match|
+      @match = match
+      self::parse
     end
   end
 

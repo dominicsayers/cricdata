@@ -6,6 +6,7 @@ class Player
   field :type_number,     :type => Integer
   field :player_ref,      :type => Integer
   field :name,            :type => String
+  field :fullname,        :type => String
   field :dirty,           :type => Boolean
 
   # Stats
@@ -57,12 +58,37 @@ class Player
   # Helpers
   # Get history of fielding performances
   def self::get_fielding_statistics player
-    player_id     = player._id
-    player_ref    = player.player_ref
+    player_id   = player._id
+    player_ref  = player.player_ref
 
     # Get fielding data
-    url     = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, player.type_number]
-    doc     = get_data url
+    url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, player.type_number]
+    doc = get_data url
+
+    # If player's basic details are incomplete then we can take
+    # this opportunity to update them
+    if player.name.nil?
+      player.name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
+      player.save
+dp player.name, :cyan # debug
+    end
+
+    if player.fullname.nil?
+      scripts = doc.xpath('//script')
+
+      scripts.each do |script|
+        /var omniPageName.+:(.+)";/i.match(script.content[0..100])
+
+        unless $1.nil?
+          player.fullname = $1
+          player.save
+dp $1, :cyan
+          break
+        end
+      end
+    end
+
+    # Process fielding data
     nodeset = doc.xpath('//tr[@class="data1"]')
 
     if nodeset.length == 0
@@ -70,6 +96,10 @@ class Player
     else
       nodeset.each do |node|
         subnodes        = node.xpath('td')
+
+        # A player may have no performances in this category
+        break unless subnodes.length > 1
+
         href            = '/ci/engine/match/'
         href_len        = href.length
         match_node      = subnodes[10].xpath("a[substring(@href,1,#{href_len})='#{href}']").first
@@ -108,6 +138,13 @@ class Player
 dputs "#{player.name} (#{player_id})", :white # debug
 
     performances  = Performance.where(player_id: player_id)
+
+    # A player may have no performances, in which case we don't need them
+    if performances.length == 0
+      dputs 'No performances', :red
+      player.destroy
+      return false
+    end
 
     # Batting stats
     innings         = 0
