@@ -61,6 +61,8 @@ class Player
     player_id   = player._id
     player_ref  = player.player_ref
 
+#-$\ = ' ' # debug
+
     # Get fielding data
     url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, player.type_number]
     doc = get_data url
@@ -96,7 +98,7 @@ dp $1, :cyan
     else
       nodeset.each do |node|
         subnodes        = node.xpath('td')
-
+#-dputs subnodes, :pink # debug
         # A player may have no performances in this category
         break unless subnodes.length > 1
 
@@ -112,17 +114,24 @@ dp $1, :cyan
         else
           href            = match_node.attributes['href'].value
           match_ref       = href[href_len..-1].split('.').first
-          match           = Match.where(match_ref:match_ref).first
-          inning_number   = subnodes[5].children.first.content
-          inning          = match.innings.find_or_create_by inning_number: inning_number
-          performance     = inning.performances.find_or_create_by player_id: player_id
+#-dprint match_ref, :pink # debug
+          matches         = Match.where(match_ref:match_ref)
 
-          performance.dismissals    = subnodes[0].children.first.content
-          performance.catches_total = subnodes[1].children.first.content
-          performance.stumpings     = subnodes[2].children.first.content
-          performance.catches_wkt   = subnodes[3].children.first.content
-          performance.catches       = subnodes[4].children.first.content
-          performance.save
+          if matches.length == 0
+            dputs "Match #{match_ref} not found", :red
+          else
+            match = matches.first
+            inning_number   = subnodes[5].children.first.content
+            inning          = match.innings.find_or_create_by inning_number: inning_number
+            performance     = inning.performances.find_or_create_by player_id: player_id
+
+            performance.dismissals    = subnodes[0].children.first.content
+            performance.catches_total = subnodes[1].children.first.content
+            performance.stumpings     = subnodes[2].children.first.content
+            performance.catches_wkt   = subnodes[3].children.first.content
+            performance.catches       = subnodes[4].children.first.content
+            performance.save
+          end
         end
       end
     end

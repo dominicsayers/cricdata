@@ -87,14 +87,14 @@ dputs pf.inspect # debug
 
     return false if @match.nil?
 
-    match_ref         = @match.match_ref
+    match_ref = @match.match_ref
 
     # Get match data
-    raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+    raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
     if raw_match.zhtml.blank?
       url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
-      raw_match.zhtml  = BSON::Binary.new(Zlib::Deflate.deflate(get_response(url)))
+      raw_match.zhtml = BSON::Binary.new(Zlib::Deflate.deflate(get_response(url)))
       raw_match.save
     end
 

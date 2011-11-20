@@ -17,18 +17,27 @@ class Search
     doc     = get_data(url)
     nodeset = doc.xpath('//a[text()="Match scorecard"]')
 
+    $\ = ' ' # debug
+
     if nodeset.length == 0
       return false # page not found
     else
       nodeset.each do |node|
         match_href    = node.attributes['href'].value
         match_ref     = match_href.split('/').last.split('.').first
-        match         = Match.find_or_create_by match_ref: match_ref
+#-dputs match_ref, :pink # debug
+        match         = Match.find_or_create_by match_ref:match_ref
         match.parsed  = false if match.parsed.nil?
         match.save
 
         break unless match.persisted?
 
+        # Why not parse the match straight away?
+        unless match.parsed
+           dputs "Failed to parse match #{match_ref}", :red unless Match.parse match_ref
+        end
+
+#-dp match # debug
         @search.games << match_ref unless @search.nil?
       end
 

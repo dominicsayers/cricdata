@@ -5,7 +5,7 @@ require "#{Rails.root}/app/helpers/fetch"
 include ConsoleLog
 include Fetch
 
-namespace :migrate do
+namespace :admin do
   desc "These tasks are run manually for admin purposes"
   task :mark_all_players_dirty => :environment do
       dputs 'Marking all players as dirty...'
@@ -41,15 +41,16 @@ namespace :migrate do
 
         begin
           player = Player.find(player_id)
-          dprint player.name
+          dprint '.', :white
         rescue
-          dprint player_id, :cyan
-
           type_number, player_ref = player_id.split('-')
 
           # Get fielding data
           url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, type_number]
+          dputs ''
           doc = get_data url
+
+          dprint player_id, :cyan
 
           # Name
           name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
@@ -64,7 +65,7 @@ namespace :migrate do
 
             unless $1.nil?
               fullname = $1
-              dprint $1, :cyan
+              dputs $1, :cyan
               break
             end
           end
