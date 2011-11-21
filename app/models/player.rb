@@ -11,6 +11,7 @@ class Player
 
   # Stats
   field :matchcount,      :type => Integer
+  field :xfactor,         :type => Float
 
   # Batting
   field :innings,         :type => Integer
@@ -51,6 +52,7 @@ class Player
   scope :dirty, where(dirty: true)
   scope :clean, where(dirty: false)
   scope :indeterminate, where(:dirty.exists => false)
+  scope :xfactory, where(type_number:1, :runs.gte => 500, :bat_average.gte => 30, :wickets.gte => 50, :bowl_average.lte => 35).desc(:xfactor)
 
   # Relationships
   has_many :performances

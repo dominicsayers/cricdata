@@ -1,0 +1,14 @@
+<table>
+  <% @players.each do |player| %>
+  <tr>
+    <td><%= player.name %></td>
+    <td><%= player.matchcount %></td>
+    <td><%= player.runs %></td>
+    <td><%= player.bat_average %></td>
+    <td><%= player.wickets %></td>
+    <td><%= player.bowl_average %></td>
+    <td><%= player.catches %></td>
+    <td><%= player.xfactor %></td>
+  </tr>
+  <% end %>
+</table>

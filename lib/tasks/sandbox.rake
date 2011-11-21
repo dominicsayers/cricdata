@@ -6,6 +6,17 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :xfactor => :environment do
+    Player.all.each do |player|
+      next if player.bat_average.nil?
+      next if player.bowl_average.nil?
+dprint player.name
+      player.xfactor = 5 + player.bat_average - player.bowl_average + (player.catches / player.matchcount)
+dputs " #{player.xfactor}"
+      player.save
+    end
+  end
+
   task :player_name => :environment do
     url     = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % ["52057", 1]
     doc     = get_data url
