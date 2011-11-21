@@ -116,11 +116,13 @@ dp $1, :cyan
           match_ref       = href[href_len..-1].split('.').first
 #-dprint match_ref, :pink # debug
           matches         = Match.where(match_ref:match_ref)
+#-dprint matches.length, :pink # debug
 
           if matches.length == 0
             dputs "Match #{match_ref} not found", :red
           else
             match = matches.first
+#-dp match, :cyan # debug
             inning_number   = subnodes[5].children.first.content
             inning          = match.innings.find_or_create_by inning_number: inning_number
             performance     = inning.performances.find_or_create_by player_id: player_id
@@ -308,7 +310,7 @@ dputs "#{player.name} (#{player_id})", :white # debug
 
     # Control
     player.dirty            = false
-dputs player.inspect # debug
+#-dputs player.inspect # debug
     player.save
   end
 

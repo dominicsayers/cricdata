@@ -2,7 +2,7 @@ class Search
   include Mongoid::Document
 
   # Fields
-  field :occasion, :type => Time
+  field :occasion, :type => DateTime
   field :maxpage, :type => Integer
   field :games, :type => Array
 
