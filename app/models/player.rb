@@ -11,6 +11,8 @@ class Player
 
   # Stats
   field :matchcount,      :type => Integer
+  field :firstmatch,      :type => Date
+  field :lastmatch,       :type => Date
   field :xfactor,         :type => Float
 
   # Batting
@@ -94,6 +96,7 @@ dp $1, :cyan
 
     # Process fielding data
     nodeset = doc.xpath('//tr[@class="data1"]')
+    lastmatch = 0
 
     if nodeset.length == 0
       return false # page not found
@@ -125,6 +128,14 @@ dp $1, :cyan
           else
             match = matches.first
 #-dp match, :cyan # debug
+
+            # Is this the player's debut match?
+            if player.firstmatch.nil?
+              player.firstmatch = match.date_start
+              player.save
+            end
+
+            lastmatch       = match.date_end
             inning_number   = subnodes[5].children.first.content
             inning          = match.innings.find_or_create_by inning_number: inning_number
             performance     = inning.performances.find_or_create_by player_id: player_id
@@ -138,6 +149,11 @@ dp $1, :cyan
           end
         end
       end
+    end
+
+    unless lastmatch == 0
+      player.lastmatch = lastmatch
+      player.save
     end
   end
 
