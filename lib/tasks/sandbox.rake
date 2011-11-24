@@ -6,6 +6,14 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :career_span => :environment do
+    $\ = ' '
+
+    Player.where(:firstmatch.exists => false).each do |player|
+      dprint player.name
+    end
+  end
+
   task :xfactor => :environment do
     Player.all.each do |player|
       next if player.bat_average.nil?
