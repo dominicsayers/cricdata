@@ -33,18 +33,18 @@ class Performance
   field :cum_strikerate,  :type => Float
   field :cum_economy,     :type => Float
 
-  index([ [:inning_id, Mongo::ASCENDING], [:player_id, Mongo::ASCENDING] ], unique: true)
-  index([ [:player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
+  index([ [:inning_id, Mongo::ASCENDING], [:match_type_player_id, Mongo::ASCENDING] ], unique: true)
+  index([ [:match_type_player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
 
   # Validations
 
   # Scopes
-  default_scope asc(:inning_id, :player_id)
+  default_scope asc(:inning_id, :match_type_player_id)
   scope :batting, where(:runs.exists => true)
   scope :bowling, where(:runs.exists => false)
 
   # Relationships
-  belongs_to :player
+  belongs_to :match_type_player
   belongs_to :inning
 
   # Helpers

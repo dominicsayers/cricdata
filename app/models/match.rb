@@ -38,12 +38,12 @@ dputs pf.inspect # debug
       end
     else
       # Make sure player exists
-      player        = Player.find_or_create_by type_number:@match.match_type.type_number, player_ref:pf[:ref]
-      player.name   = pf[:name]
-      player.dirty  = true
-      player.save
+      mtp        = MatchTypePlayer.find_or_create_by type_number:@match.match_type.type_number, player_ref:pf[:ref]
+      mtp.name   = pf[:name]
+      mtp.dirty  = true
+      mtp.save
 
-      performance = inning.performances.find_or_create_by player_id: player._id
+      performance = inning.performances.find_or_create_by match_type_player_id: mtp._id
 
       if pf[:bowling].length == 0
         # Record batting analysis

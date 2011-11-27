@@ -1,9 +1,10 @@
-// Place all the styles related to the Players controller here.
+// Place all the styles related to the MatchTypePlayers controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 table.xfactor {
 	.name		{text-align: left;}
 	tr:hover	{background-color: #EEE;}
+	a		{text-decoration: none;}
 
 	td, th {
 		padding: 0 0.5em;

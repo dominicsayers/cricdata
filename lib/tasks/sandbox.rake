@@ -6,26 +6,105 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :player_friendly_id => :environment do
+    $\ = ' '
+
+    Player.destroy_all
+
+    MatchTypePlayer.all.each do |mtp|
+      mtp.unset(:player_id)
+      mtp.unset(:player_ids)
+    end
+
+    MatchTypePlayer.all.each do |mtp|
+      unless mtp.name.nil?
+        dprint mtp.name, :white
+        slug = mtp.name.parameterize
+        dprint slug, :cyan
+
+        player = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+
+        player.add_to_set :player_refs, mtp.player_ref
+        player.save
+        dp player.player_refs
+        mtp.player = player
+      end
+
+      if mtp.fullname.nil?
+        dputs 'No full name', :red
+      else
+        slug = mtp.fullname.parameterize
+        dprint slug, :cyan
+
+        player = Player.find_or_create_by slug:slug
+
+        player.add_to_set :player_refs, mtp.player_ref
+        player.add_to_set :match_type_player_ids, mtp._id
+        dp player.player_refs
+        player.save
+
+        # Do all components of name too
+        nameparts = mtp.fullname.split(' ')
+
+        nameparts.each do |subslug|
+          slug = subslug.parameterize
+          dprint slug, :cyan
+
+          player = Player.find_or_create_by slug:slug
+
+          player.add_to_set :player_refs, mtp.player_ref
+#-          player.add_to_set :match_type_player_ids, mtp._id
+          dp player.player_refs
+          player.save
+        end
+      end
+
+      mtp.save
+    end
+  end
+
   task :career_span => :environment do
     $\ = ' '
 
-    Player.where(:firstmatch.exists => false).each do |player|
-      dprint player.name
+    zeroday = Match.min(:date_start).to_date
+    dputs zeroday
+
+    MatchTypePlayer.all.each do |mtp|
+      dprint mtp.name, :white
+
+      debut     = Date.today.to_date
+      swansong  = zeroday
+
+      mtp.performances.each do |pf|
+        match = pf.inning.match
+        date_start  = match.date_start.to_date
+        date_end    = match.date_end.to_date
+
+        debut       = date_start  if date_start < debut
+        swansong    = date_end    if date_end > swansong
+      end
+
+      dprint debut
+      dputs swansong
+
+      mtp.firstmatch = debut
+      mtp.lastmatch  = swansong
+      mtp.save
     end
   end
 
   task :xfactor => :environment do
-    Player.all.each do |player|
-      next if player.bat_average.nil?
-      next if player.bowl_average.nil?
-dprint player.name
-      player.xfactor = 5 + player.bat_average - player.bowl_average + (player.catches / player.matchcount)
-dputs " #{player.xfactor}"
-      player.save
+    MatchTypePlayer.all.each do |mtp|
+      next if mtp.bat_average.nil?
+      next if mtp.bowl_average.nil?
+dprint mtp.name
+      mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
+dputs " #{mtp.xfactor}"
+      mtp.save
     end
   end
 
-  task :player_name => :environment do
+  task :mtp_name => :environment do
     url     = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % ["52057", 1]
     doc     = get_data url
 

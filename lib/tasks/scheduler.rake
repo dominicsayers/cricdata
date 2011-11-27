@@ -30,7 +30,7 @@ namespace :regular do
 		desc 'Update statistics for all players with recent performances'
 		task :update_dirty_players => :environment do
 				dputs "Updating players' statistics..."
-				Player.update_dirty_players
+				MatchTypePlayer.update_dirty_players
 				dputs 'done.'
 		end
 end

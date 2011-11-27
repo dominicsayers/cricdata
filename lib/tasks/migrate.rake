@@ -22,7 +22,7 @@ namespace :migrate do
 				# Performances
 				dputs 'Performances', :white
 
-				Performance.find(:all, :conditions => {:player_id => /^.[0-9].+/i}).each do |pf|
+				Performance.find(:all, :conditions => {:match_type_player_id => /^.[0-9].+/i}).each do |pf|
 					inning			= pf.inning
 					match 			= inning.match
 
@@ -32,7 +32,7 @@ namespace :migrate do
 					hsh.delete '_id'
 
 					pf2						= Performance.new(hsh)
-					pf2.player_id	= "#{match.match_type_id}-#{pf.player_id}"
+					pf2.match_type_player_id	= "#{match.match_type_id}-#{pf.match_type_player_id}"
 					pf2.save
 
 					dprint pf2._id
@@ -43,20 +43,20 @@ namespace :migrate do
 				dputs "\r\nend\r\n", :white
 
 				# Players
-				dputs 'Players', :white
+				dputs 'MatchTypePlayers', :white
 
-				Player.where(:player_id.exists => true).each do |player|
-					player.player_ref = player._id
-					dprint player.name, :cyan
+				MatchTypePlayer.where(:match_type_player_id.exists => true).each do |mtp|
+					mtp.player_ref = mtp._id
+					dprint mtp.name, :cyan
 
 					MatchType.all.each do |match_type|
-						new_player				= Player.find_or_create_by type_number:match_type.type_number, player_ref:player._id
-						new_player.name		= player.name
-						new_player.dirty	= player.dirty
-						new_player.save
+						new_mtp				= MatchTypePlayer.find_or_create_by type_number:match_type.type_number, player_ref:mtp._id
+						new_mtp.name		= mtp.name
+						new_mtp.dirty	= mtp.dirty
+						new_mtp.save
 					end
 
-					player.destroy
+					mtp.destroy
 				end
 
 				dputs "\r\nend\r\n", :white

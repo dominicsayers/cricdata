@@ -10,10 +10,10 @@ namespace :admin do
   task :mark_all_players_dirty => :environment do
       dputs 'Marking all players as dirty...'
 
-      Player.all.each do |player|
-        player.dirty = true
-  dputs player.inspect # debug
-        player.save
+      MatchTypePlayer.all.each do |mtp|
+        mtp.dirty = true
+  dputs mtp.inspect # debug
+        mtp.save
       end
 
       dputs 'done.'
@@ -22,10 +22,10 @@ namespace :admin do
   task :mark_indeterminate_players_dirty => :environment do
       dputs 'Marking all indeterminate players as dirty...'
 
-      Player.indeterminate.each do |player|
-        player.dirty = true
-  dputs player.inspect # debug
-        player.save
+      MatchTypePlayer.indeterminate.each do |mtp|
+        mtp.dirty = true
+  dputs mtp.inspect # debug
+        mtp.save
       end
 
       dputs 'done.'
@@ -37,20 +37,20 @@ namespace :admin do
       $\ = ' '
 
       Performance.all.each do |pf|
-        player_id = pf.player_id
+        match_type_player_id = pf.match_type_player_id
 
         begin
-          player = Player.find(player_id)
+          mtp = MatchTypePlayer.find(match_type_player_id)
           dprint '.', :white
         rescue
-          type_number, player_ref = player_id.split('-')
+          type_number, player_ref = match_type_player_id.split('-')
 
           # Get fielding data
           url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, type_number]
           dputs ''
           doc = get_data url
 
-          dprint player_id, :cyan
+          dprint match_type_player_id, :cyan
 
           # Name
           name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
@@ -70,11 +70,11 @@ namespace :admin do
             end
           end
 
-          player          = Player.new(type_number:type_number, player_ref:player_ref)
-          player.name     = name
-          player.fullname = fullname unless fullname.blank?
-          player.dirty    = true
-          player.save
+          mtp          = MatchTypePlayer.new(type_number:type_number, player_ref:player_ref)
+          mtp.name     = name
+          mtp.fullname = fullname unless fullname.blank?
+          mtp.dirty    = true
+          mtp.save
         end
       end
 
@@ -84,7 +84,7 @@ namespace :admin do
   task :update_player, [:player_ref] => [:environment] do |t, args|
       player_ref = (args.player_ref || "0")
       dputs "Parsing #{player_ref}..."
-      Player.update player_ref
+      MatchTypePlayer.update player_ref
       dputs 'done.'
   end
 
