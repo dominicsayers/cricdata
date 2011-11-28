@@ -63,12 +63,14 @@ class MatchTypePlayer
   has_many :performances
 
   # Helpers
+  #----------------------------------------------------------------------------
   # Get history of fielding performances
   def self::get_fielding_statistics mtp
-    match_type_player_id   = mtp._id
-    player_ref  = mtp.player_ref
+    match_type_player_id  = mtp._id
+    player_ref            = mtp.player_ref
 
-#-$\ = ' ' # debug
+$\ = ' ' # debug
+dputs player_ref, :cyan # debug
 
     # Get fielding data
     url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, mtp.type_number]
@@ -76,20 +78,7 @@ class MatchTypePlayer
 
     # If player's basic details are incomplete then we can take
     # this opportunity to update them
-    if mtp.name.nil?
-      mtp.name  = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
-dp mtp.name, :cyan # debug
-      slug      = mtp.name.parameterize
-dprint slug, :cyan # debug
-      player    = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
-
-      player.add_to_set :player_refs, player_ref
-      player.save
-dp player.player_refs # debug
-
-      mtp.player = player
-      mtp.save
-    end
+    mtp.name  = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip if mtp.name.nil?
 
     if mtp.fullname.nil?
       scripts = doc.xpath('//script')
@@ -98,32 +87,42 @@ dp player.player_refs # debug
         /var omniPageName.+:(.+)";/i.match(script.content[0..100])
 
         unless $1.nil?
-dp $1, :cyan
           mtp.fullname  = $1
-          slug          = mtp.fullname.parameterize
-dprint slug, :cyan # debug
-          player        = Player.find_or_create_by slug:slug
-          player.add_to_set :player_refs, player_ref
-          player.add_to_set :match_type_player_ids, mtp._id
-dp player.player_refs # debug
-          player.save
-
-          # Do all components of name too
-          nameparts = mtp.fullname.split(' ')
-
-          nameparts.each do |subslug|
-            slug    = subslug.parameterize
-dprint slug, :cyan # debug
-            player  = Player.find_or_create_by slug:slug
-            player.add_to_set :player_refs, mtp.player_ref
-dp player.player_refs # debug
-            player.save
-          end
-
           mtp.save
           break
         end
       end
+    end
+
+    # Update Player document
+    # Scorecard name (master document)
+    slug    = mtp.name.parameterize
+    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+    player.master_ref = player_ref
+    player.fullname   = mtp.fullname
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, mtp._id
+dp player, :pink # debug
+    player.save
+
+    mtp.player = player
+    mtp.save
+
+    # Full name
+    slug    = mtp.fullname.parameterize
+    player  = Player.find_or_create_by slug:slug
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, mtp._id
+    player.save
+
+    # Name parts
+    nameparts = mtp.fullname.split(' ')
+
+    nameparts.each do |subslug|
+      slug    = subslug.parameterize
+      player  = Player.find_or_create_by slug:slug
+      player.add_to_set :player_refs, mtp.player_ref
+      player.save
     end
 
     # Process fielding data
@@ -157,6 +156,7 @@ dp player.player_refs # debug
 
           if matches.length == 0
             dputs "Match #{match_ref} not found", :red
+            exit
           else
             match = matches.first
 #-dp match, :cyan # debug
@@ -189,6 +189,7 @@ dp player.player_refs # debug
     end
   end
 
+  #----------------------------------------------------------------------------
   # Update cumulative statistics from performance data
   def self::update_statistics mtp
     # Get fielding statistics
@@ -359,7 +360,7 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
     mtp.catches          = catches
 #-dprint '-fielding2', :cyan # debug
 
-dputs mtp.inspect # debug
+#-dputs mtp.inspect # debug
 
     # X-factor
     if mtp.matchcount.nil? || mtp.bat_average.nil? || mtp.bowl_average.nil?
@@ -367,7 +368,7 @@ dputs mtp.inspect # debug
     else
       case mtp.type_number
       when MatchType::TEST
-dprint 'Test' # debug
+#-dprint 'Test' # debug
         if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -376,7 +377,7 @@ dprint 'Test' # debug
           mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
         end
       when MatchType::ODI
-dprint 'ODI' # debug
+#-dprint 'ODI' # debug
         if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -385,7 +386,7 @@ dprint 'ODI' # debug
           mtp.xfactor = mtp.bat_strikerate + mtp.bat_average + 50 - mtp.bowl_strikerate - (30 * mtp.economy) + (mtp.catches / mtp.matchcount)
         end
       when MatchType::T20I
-dprint 'T20I' # debug
+#-dprint 'T20I' # debug
         # T20I X-factor
         mtp.xfactor = mtp.bat_strikerate + (5 * mtp.bat_average / 4) - 5 - (5 * (mtp.bowl_strikerate - (2 * mtp.economy))) + (mtp.catches / mtp.matchcount)
       end
@@ -393,7 +394,7 @@ dprint 'T20I' # debug
 
     # Control
     mtp.dirty            = false
-dputs mtp.inspect # debug
+dputs mtp.inspect, :white # debug
     mtp.save
   end
 

@@ -17,7 +17,7 @@ namespace :sandbox do
   task :fixup_performances => :environment do
 $\= ' '
 
-    Performance.all.each do |pf|
+    Performance.where(:player_id.exists => true).limit(65000).each do |pf|
 #      pf.match_type_player_id = pf.player_id
       pf.unset(:player_id)
       pf.save

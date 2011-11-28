@@ -8,26 +8,16 @@ include Fetch
 namespace :admin do
   desc "These tasks are run manually for admin purposes"
   task :mark_all_players_dirty => :environment do
-      dputs 'Marking all players as dirty...'
+    $\ = ' '
 
-      MatchTypePlayer.all.each do |mtp|
-        mtp.dirty = true
-  dputs mtp.inspect # debug
-        mtp.save
-      end
-
-      dputs 'done.'
+    dputs 'Marking all players as dirty...'
+		MatchTypePlayer.all.update_all(dirty:true)
+    dputs 'done.'
   end
 
   task :mark_indeterminate_players_dirty => :environment do
       dputs 'Marking all indeterminate players as dirty...'
-
-      MatchTypePlayer.indeterminate.each do |mtp|
-        mtp.dirty = true
-  dputs mtp.inspect # debug
-        mtp.save
-      end
-
+      MatchTypePlayer.indeterminate.update_all(dirty:true)
       dputs 'done.'
   end
 
@@ -43,14 +33,14 @@ namespace :admin do
           mtp = MatchTypePlayer.find(match_type_player_id)
           dprint '.', :white
         rescue
+          dprint match_type_player_id, :white
+
           type_number, player_ref = match_type_player_id.split('-')
 
           # Get fielding data
           url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, type_number]
           dputs ''
           doc = get_data url
-
-          dprint match_type_player_id, :cyan
 
           # Name
           name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
