@@ -99,6 +99,7 @@ dputs player_ref, :cyan # debug
     slug    = mtp.name.parameterize
     player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
     player.master_ref = player_ref
+    player.name       = mtp.name
     player.fullname   = mtp.fullname
     player.add_to_set :player_refs, player_ref
     player.add_to_set :match_type_player_ids, mtp._id
