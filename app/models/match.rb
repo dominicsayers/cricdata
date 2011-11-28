@@ -26,7 +26,8 @@ class Match
     return unless pf.has_key? :ref
 dputs pf.inspect # debug
 
-    inning = @match.innings.find_or_create_by inning_number: @inning
+    inning      = @match.innings.find_or_create_by inning_number: @inning
+    type_number = @match.match_type.type_number
 
     if pf[:ref] == 0
       # Record innings analysis
@@ -38,7 +39,7 @@ dputs pf.inspect # debug
       end
     else
       # Make sure player exists
-      mtp        = MatchTypePlayer.find_or_create_by type_number:@match.match_type.type_number, player_ref:pf[:ref]
+      mtp        = MatchTypePlayer.find_or_create_by type_number:type_number, player_ref:pf[:ref]
       mtp.name   = pf[:name]
       mtp.dirty  = true
       mtp.save
@@ -46,6 +47,9 @@ dputs pf.inspect # debug
       performance = inning.performances.find_or_create_by match_type_player_id: mtp._id
 
       if pf[:bowling].length == 0
+        # T20I matches don't have minutes in analysis, so we interpolate a 0
+        pf[:batting].insert(0, 0) if type_number = MatchType::T20I
+
         # Record batting analysis
         performance.runs          = pf[:runs]
         performance.minutes       = pf[:batting][0]

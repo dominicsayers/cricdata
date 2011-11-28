@@ -77,9 +77,18 @@ class MatchTypePlayer
     # If player's basic details are incomplete then we can take
     # this opportunity to update them
     if mtp.name.nil?
-      mtp.name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
-      mtp.save
+      mtp.name  = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
 dp mtp.name, :cyan # debug
+      slug      = mtp.name.parameterize
+dprint slug, :cyan # debug
+      player    = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+
+      player.add_to_set :player_refs, player_ref
+      player.save
+dp player.player_refs # debug
+
+      mtp.player = player
+      mtp.save
     end
 
     if mtp.fullname.nil?
@@ -89,9 +98,29 @@ dp mtp.name, :cyan # debug
         /var omniPageName.+:(.+)";/i.match(script.content[0..100])
 
         unless $1.nil?
-          mtp.fullname = $1
-          mtp.save
 dp $1, :cyan
+          mtp.fullname  = $1
+          slug          = mtp.fullname.parameterize
+dprint slug, :cyan # debug
+          player        = Player.find_or_create_by slug:slug
+          player.add_to_set :player_refs, player_ref
+          player.add_to_set :match_type_player_ids, mtp._id
+dp player.player_refs # debug
+          player.save
+
+          # Do all components of name too
+          nameparts = mtp.fullname.split(' ')
+
+          nameparts.each do |subslug|
+            slug    = subslug.parameterize
+dprint slug, :cyan # debug
+            player  = Player.find_or_create_by slug:slug
+            player.add_to_set :player_refs, mtp.player_ref
+dp player.player_refs # debug
+            player.save
+          end
+
+          mtp.save
           break
         end
       end
@@ -163,7 +192,7 @@ dp $1, :cyan
   # Update cumulative statistics from performance data
   def self::update_statistics mtp
     # Get fielding statistics
-# debug    self::get_fielding_statistics mtp
+    self::get_fielding_statistics mtp
 
     # Process performance data
     match_type_player_id     = mtp._id
@@ -214,6 +243,7 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
 #-dp pf, :pink # debug
       # Batting stats
       unless pf.runs.nil?
+#-dprint 'batting...', :cyan # debug
         # Check fields
         pf.runs     = 0 unless pf.runs.is_a?(Numeric)
         pf.sixes    = 0 unless pf.sixes.is_a?(Numeric) # DJ Bravo, match 287853
@@ -227,7 +257,6 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
         balls       += pf.balls   || 0
         fours       += pf.fours   || 0
         sixes       += pf.sixes   || 0
-#-dprint 'batting', :cyan # debug
 
         if completed > 0
           bat_average = runs.to_f / completed.to_f
@@ -238,6 +267,7 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
           bat_strikerate    = 100 * runs.to_f / balls.to_f
           pf.cum_strikerate = bat_strikerate
         end
+#-dprint 'batting finished', :cyan # debug
       end
 
       unless pf.overs.nil?
@@ -329,12 +359,15 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
     mtp.catches          = catches
 #-dprint '-fielding2', :cyan # debug
 
+dputs mtp.inspect # debug
+
     # X-factor
     if mtp.matchcount.nil? || mtp.bat_average.nil? || mtp.bowl_average.nil?
       mtp.unset(:xfactor)
     else
       case mtp.type_number
       when MatchType::TEST
+dprint 'Test' # debug
         if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -343,22 +376,24 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
           mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
         end
       when MatchType::ODI
+dprint 'ODI' # debug
         if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
         else
           # ODI X-factor
-          mtp.xfactor = (mtp.bat_strikerate + mtp.bat_average - 130) + (180 - mtp.bowl_strikerate - (30 * mtp.economy)) + (mtp.catches / mtp.matchcount)
+          mtp.xfactor = mtp.bat_strikerate + mtp.bat_average + 50 - mtp.bowl_strikerate - (30 * mtp.economy) + (mtp.catches / mtp.matchcount)
         end
       when MatchType::T20I
+dprint 'T20I' # debug
         # T20I X-factor
-        mtp.xfactor = (mtp.bat_strikerate + (5 * mtp.bat_average / 4) - 150) + (145 - (5 * (mtp.bowl_strikerate - (2 * mtp.economy)))) + (mtp.catches / mtp.matchcount)
+        mtp.xfactor = mtp.bat_strikerate + (5 * mtp.bat_average / 4) - 5 - (5 * (mtp.bowl_strikerate - (2 * mtp.economy))) + (mtp.catches / mtp.matchcount)
       end
     end
 
     # Control
     mtp.dirty            = false
-#-dputs mtp.inspect # debug
+dputs mtp.inspect # debug
     mtp.save
   end
 

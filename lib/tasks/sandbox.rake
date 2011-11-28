@@ -6,6 +6,26 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :reparse_T20Is => :environment do
+    Match.where(match_type_id:"3").each do |match|
+      match_ref = match.match_ref
+      dputs match_ref, :white
+      Match.parse match_ref
+    end
+  end
+
+  task :fixup_performances => :environment do
+$\= ' '
+
+    Performance.all.each do |pf|
+#      pf.match_type_player_id = pf.player_id
+      pf.unset(:player_id)
+      pf.save
+dprint pf.match_type_player_id
+    end
+dputs "\r\ndone"
+  end
+
   task :player_friendly_id => :environment do
     $\ = ' '
 
@@ -53,7 +73,7 @@ namespace :sandbox do
           player = Player.find_or_create_by slug:slug
 
           player.add_to_set :player_refs, mtp.player_ref
-#-          player.add_to_set :match_type_player_ids, mtp._id
+
           dp player.player_refs
           player.save
         end
