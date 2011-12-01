@@ -6,14 +6,16 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
-  task :minutes => :environment do
+  task :new_stats => :environment do
       $\ = ' '
 
+    Performance.destroy_all
+    
     Match.all.each do |match|
-      match_ref         = match.match_ref
-  dputs match_ref, :white # debug
+      match_ref = match.match_ref
+dputs match_ref, :white # debug
       # Get match data
-      raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+      raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
       if raw_match.zhtml.blank?
         url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
@@ -27,37 +29,37 @@ namespace :sandbox do
       # Innings header
       # We don't know which batting stats were recorded for this innings
       inning_nodeset  = doc.xpath("//tr[@class='inningsHead']")
-      inning          = 1
+      inning_number   = 1
       borb            = :batting
       stats_template  = {}
 
       inning_nodeset.each do |inning_node|
         inning_header_nodeset = inning_node.xpath('td/b')
-        stats_template[inning] = {:batting => [], :bowling => []} unless stats_template.has_key? inning
+        stats_template[inning_number] = {:batting => [], :bowling => []} unless stats_template.has_key? inning_number
 #-dputs borb
-#-dputs "Innings #{inning}"
+#-dputs "Innings #{inning_number}"
 
         inning_header_nodeset.each do |inning_header_node|
-dp inning_header_node, :pink
-dputs inning_header_node.children.length, :pink
-          break if inning_header_node.children.length == 0
-          text = inning_header_node.children.first.text
-          stats_template[inning][borb] << text.to_sym
+          # Gather the column headings: R M B 4s 6s SR etc.
+#-dp inning_header_node, :pink
+#-dputs inning_header_node.children.length, :pink
+          text = inning_header_node.children.length == 0 ? :Extras : inning_header_node.children.first.text
+          stats_template[inning_number][borb] << text.to_sym
         end
-#-dp stats_template[inning][borb]
+#-dp stats_template[inning_number][borb]
 
         if borb == :bowling
-          inning  += 1
-          borb    = :batting
+          inning_number += 1
+          borb = :batting
         else
-          borb    = :bowling
+          borb = :bowling
         end
       end
-dp stats_template, :cyan
+#-dp stats_template, :cyan
 
       # Innings
       inning_nodeset  = doc.xpath("//tr[@class='inningsRow']/td")
-      inning          = 1
+      inning_number   = 1
       borb            = :batting
       stats           = {}
       pf              = {}
@@ -68,11 +70,12 @@ dp stats_template, :cyan
         classname     = classattr.nil? ? '' : classattr.value
         firstchild    = inning_node.children.first
         text          = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
-        stats[inning] = {:batting => [], :bowling => []} unless stats.has_key? inning
+
+        stats[inning_number] = {:batting => [], :bowling => []} unless stats.has_key? inning_number
 
         case classname.to_sym
         when :playerName
-          stats[inning][borb] << pf unless pf == {} # save current performance hash
+          stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
           # This is the next player, so start a new performance hash
           player_node   = firstchild
@@ -82,7 +85,7 @@ dp stats_template, :cyan
           pf            = {name:player_node.children.first.content, ref:href[href_len..-1].split('.').first}
           stats_counter = 0
         when :inningsDetails
-          stats[inning][borb] << pf unless pf == {} # save current performance hash
+          stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
           # Innings summary, so start a new performance hash
           pf            = {name:text, ref:0}
@@ -90,15 +93,15 @@ dp stats_template, :cyan
         when :battingDismissal
           if borb == :bowling
             # When we go from bowling performances to batting, that's the start of the next innings
-            inning        += 1
+            inning_number += 1
             borb          = :batting
             stats_counter = 0
           end
 
           pf[:howout]     = text
         when :battingRuns, :battingDetails
-          key             = stats_template[inning][borb][stats_counter]
-dprint "#{stats_counter} #{key}", :pink
+          key             = stats_template[inning_number][borb][stats_counter]
+#-dprint "#{stats_counter} #{key}", :pink
           stats_counter   += 1
           pf[key]         = text
         when :bowlingDetails
@@ -107,15 +110,90 @@ dprint "#{stats_counter} #{key}", :pink
             stats_counter = 0
           end
 
-          key             = stats_template[inning][borb][stats_counter]
-dprint "#{stats_counter} #{key}", :pink
+          key             = stats_template[inning_number][borb][stats_counter]
+#-dprint "#{stats_counter} #{key}", :pink
           stats_counter   += 1
           pf[key]         = text
         end
       end
 
-      stats[inning][borb] << pf unless pf == {} # save current performance hash
+      stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 dpp stats
+
+      # Now we have the stats gathered into a hash, we can parse out the
+      # players' performmances
+      [1..4].each do |i|
+        break unless stats.has_key? i
+
+        inning      = match.innings.find_or_create_by inning_number: i
+        type_number = match.match_type.type_number
+
+        # Batting
+        stats[i][:batting].each do |p|
+          if p[:ref] == 0
+            # Record innings analysis
+            if p[:name].downcase == 'extras'
+              inning.extras          = p[:runs]
+              inning.extras_analysis = p[:howout]
+            else
+              inning.summary         = p[:howout]
+            end
+          else
+            # Make sure player exists
+            mtp        = MatchTypePlayer.find_or_create_by type_number: type_number, player_ref: p[:ref]
+            mtp.name   = p[:name]
+            mtp.dirty  = true
+            mtp.save
+
+            performance = inning.performances.find_or_create_by match_type_player_id: mtp._id
+
+            # Record batting analysis
+            performance.runs          = p[:R]
+            performance.minutes       = p[:M]
+            performance.balls         = p[:B]
+            performance.fours         = p[:'4s']
+            performance.sixes         = p[:'6s']
+            performance.strikerate    = p[:SR]
+            performance.howout        = p[:howout]
+            performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
+
+            performance.save
+          end
+
+          inning.save
+        end
+
+        stats[i][:bowling].each do |p|
+          # Record bowling analysis
+          overs = p[:O]
+          o_and_b = overs.split('.')
+
+          if o_and_b.length == 2
+            overs = o_and_b.first
+            balls = o_and_b.last
+          else
+            balls = 0
+          end
+
+          # Make sure player exists
+          mtp        = MatchTypePlayer.find_or_create_by type_number: type_number, player_ref: p[:ref]
+          mtp.name   = p[:name]
+          mtp.dirty  = true
+          mtp.save
+
+          performance = inning.performances.find_or_create_by match_type_player_id: mtp._id
+
+          performance.overs         = overs
+          performance.oddballs      = balls
+          performance.maidens       = p[:M]
+          performance.runsconceded  = p[:R]
+          performance.wickets       = p[:W]
+          performance.economy       = p[:Econ]
+          performance.extras        = p[:Extras]
+
+          performance.save
+        end
+      end
     end
   end
 
