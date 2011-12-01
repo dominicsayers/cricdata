@@ -10,7 +10,7 @@ namespace :sandbox do
       $\ = ' '
 
     Performance.destroy_all
-    
+
     Match.all.each do |match|
       match_ref = match.match_ref
 dputs match_ref, :white # debug
@@ -44,6 +44,7 @@ dputs match_ref, :white # debug
 #-dp inning_header_node, :pink
 #-dputs inning_header_node.children.length, :pink
           text = inning_header_node.children.length == 0 ? :Extras : inning_header_node.children.first.text
+          text = :Extras if text.nil?
           stats_template[inning_number][borb] << text.to_sym
         end
 #-dp stats_template[inning_number][borb]
@@ -118,18 +119,18 @@ dputs match_ref, :white # debug
       end
 
       stats[inning_number][borb] << pf unless pf == {} # save current performance hash
-dpp stats
 
       # Now we have the stats gathered into a hash, we can parse out the
       # players' performmances
-      [1..4].each do |i|
-        break unless stats.has_key? i
+      for inning_number in 1..4
+        break unless stats.has_key? inning_number
 
-        inning      = match.innings.find_or_create_by inning_number: i
+        inning      = match.innings.find_or_create_by inning_number: inning_number
         type_number = match.match_type.type_number
 
         # Batting
-        stats[i][:batting].each do |p|
+        stats[inning_number][:batting].each do |p|
+dp p, :white
           if p[:ref] == 0
             # Record innings analysis
             if p[:name].downcase == 'extras'
@@ -158,12 +159,15 @@ dpp stats
             performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
 
             performance.save
+dp performance
           end
 
           inning.save
         end
 
-        stats[i][:bowling].each do |p|
+        stats[inning_number][:bowling].each do |p|
+dp p, :white
+
           # Record bowling analysis
           overs = p[:O]
           o_and_b = overs.split('.')
@@ -192,6 +196,7 @@ dpp stats
           performance.extras        = p[:Extras]
 
           performance.save
+dp performance
         end
       end
     end
