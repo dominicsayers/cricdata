@@ -163,10 +163,11 @@ dputs ground_name, :white # debug
     @match.serial     = match_serial
 
     # Innings
-    inning_nodeset = doc.xpath("//tr[@class='inningsRow']/td")
-    @inning        = 1
+    inning_nodeset  = doc.xpath("//tr[@class='inningsRow']/td")
+    @inning         = 1
     parsing_bowling = false
-    pf              = {} # Performance hash
+    pf_template     = { :batting => [], :bowling => [] } # Performance hash
+    pf              = pf_template
 
     inning_nodeset.each do |inning_node|
       classattr   = inning_node.attributes['class']
@@ -179,7 +180,7 @@ dputs ground_name, :white # debug
         # This is the next player, so save the previous one
         update_performance pf
 
-        pf          = { :batting => [], :bowling => [] } # Clear down for next player
+        pf          = pf_template # Clear down for next player
 
         player_node = firstchild
         href        = '/ci/content/player/'
@@ -191,7 +192,7 @@ dputs ground_name, :white # debug
         # Innings summary, so save the previous player
         update_performance pf
 
-        pf          = { :batting => [], :bowling => [] } # Clear down for next player
+        pf          = pf_template # Clear down for next player
 
         pf[:name]   = text
         pf[:ref]    = 0

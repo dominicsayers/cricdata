@@ -1,3 +1,5 @@
+require 'pp'
+
 module ConsoleLog
   def ansi color
     case color.to_sym
@@ -20,6 +22,12 @@ module ConsoleLog
   def dp message, color=:yellow
     print "\e[#{ansi color};1m"
     p message
+    print "\e[32;1m"
+  end
+
+  def dpp message, color=:yellow
+    print "\e[#{ansi color};1m"
+    pp message
     print "\e[32;1m"
   end
 

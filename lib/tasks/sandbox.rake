@@ -6,6 +6,131 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :minutes => :environment do
+      $\ = ' '
+
+    Match.all.each do |match|
+      match_ref         = match.match_ref
+  dputs match_ref, :white # debug
+      # Get match data
+      raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+
+      if raw_match.zhtml.blank?
+        url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
+        raw_match.zhtml = BSON::Binary.new(Zlib::Deflate.deflate(get_response(url)))
+        raw_match.save
+      end
+
+      doc = Nokogiri::HTML(Zlib::Inflate.inflate(raw_match.zhtml.to_s))
+
+      # Check batting columns
+      # Innings header
+      # We don't know which batting stats were recorded for this innings
+      inning_nodeset  = doc.xpath("//tr[@class='inningsHead']")
+      inning          = 1
+      borb            = :batting
+      stats_template  = {}
+
+      inning_nodeset.each do |inning_node|
+        inning_header_nodeset = inning_node.xpath('td/b')
+        stats_template[inning] = {:batting => [], :bowling => []} unless stats_template.has_key? inning
+#-dputs borb
+#-dputs "Innings #{inning}"
+
+        inning_header_nodeset.each do |inning_header_node|
+dp inning_header_node, :pink
+dputs inning_header_node.children.length, :pink
+          break if inning_header_node.children.length == 0
+          text = inning_header_node.children.first.text
+          stats_template[inning][borb] << text.to_sym
+        end
+#-dp stats_template[inning][borb]
+
+        if borb == :bowling
+          inning  += 1
+          borb    = :batting
+        else
+          borb    = :bowling
+        end
+      end
+dp stats_template, :cyan
+
+      # Innings
+      inning_nodeset  = doc.xpath("//tr[@class='inningsRow']/td")
+      inning          = 1
+      borb            = :batting
+      stats           = {}
+      pf              = {}
+      stats_counter   = 0
+
+      inning_nodeset.each do |inning_node|
+        classattr     = inning_node.attributes['class']
+        classname     = classattr.nil? ? '' : classattr.value
+        firstchild    = inning_node.children.first
+        text          = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
+        stats[inning] = {:batting => [], :bowling => []} unless stats.has_key? inning
+
+        case classname.to_sym
+        when :playerName
+          stats[inning][borb] << pf unless pf == {} # save current performance hash
+
+          # This is the next player, so start a new performance hash
+          player_node   = firstchild
+          href          = '/ci/content/player/'
+          href_len      = href.length
+          href          = player_node.attributes['href'].value
+          pf            = {name:player_node.children.first.content, ref:href[href_len..-1].split('.').first}
+          stats_counter = 0
+        when :inningsDetails
+          stats[inning][borb] << pf unless pf == {} # save current performance hash
+
+          # Innings summary, so start a new performance hash
+          pf            = {name:text, ref:0}
+          stats_counter = 0
+        when :battingDismissal
+          if borb == :bowling
+            # When we go from bowling performances to batting, that's the start of the next innings
+            inning        += 1
+            borb          = :batting
+            stats_counter = 0
+          end
+
+          pf[:howout]     = text
+        when :battingRuns, :battingDetails
+          key             = stats_template[inning][borb][stats_counter]
+dprint "#{stats_counter} #{key}", :pink
+          stats_counter   += 1
+          pf[key]         = text
+        when :bowlingDetails
+          if borb == :batting
+            borb          = :bowling
+            stats_counter = 0
+          end
+
+          key             = stats_template[inning][borb][stats_counter]
+dprint "#{stats_counter} #{key}", :pink
+          stats_counter   += 1
+          pf[key]         = text
+        end
+      end
+
+      stats[inning][borb] << pf unless pf == {} # save current performance hash
+dpp stats
+    end
+  end
+
+  task :deflate_raw_match => :environment do
+      $\ = ' '
+
+    raw_match = RawMatch.first
+    zhtml = Zlib::Deflate.deflate(raw_match.html)
+  dp zhtml, :pink # debug
+  dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+    raw_match.zhtml = BSON::Binary.new(zhtml)
+  dp raw_match.zhtml, :cyan # debug
+    raw_match.save
+  end
+
   task :reparse_T20Is => :environment do
     Match.where(match_type_id:"3").each do |match|
       match_ref = match.match_ref
