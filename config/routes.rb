@@ -9,7 +9,9 @@ Cricdata::Application.routes.draw do
     end
   end
 
-  resources :match_type_players do
-    get 'xfactor', :on => :collection
-  end
+  resources :players
+
+#-  resources :match_type_players do
+#-    get 'xfactor', :on => :collection
+#-  end
 end

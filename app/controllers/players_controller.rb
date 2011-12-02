@@ -6,6 +6,7 @@ class PlayersController < ApplicationController
   def show
 dp params # debug
     @slug = params[:id]
+
     begin
       # Look for player with this id
       @player = Player.find(@slug)
@@ -18,15 +19,27 @@ dp params # debug
       # Couldn't find a matching player, so search by slug
       @player_refs = []
 
-      players = Player.where(slug: @slug)
-      players = Player.where(slug: /^#{@slug}/) if players.length == 0
+      if /\d+/.match @slug
+        players = Player.where(master_ref: @slug)
+      else
+        players = Player.where(slug: @slug)
+        players = Player.where(slug: /^#{@slug}/) if players.length == 0
+      end
 
-      if players.length == 0
+      case players.length
+      when 0
         @message = {:error => 'No matching players'}
 
         respond_to do |format|
           format.html { render 'empty' }
           format.json { render json: @message }
+        end
+      when 1
+        @player = players.first
+
+        respond_to do |format|
+          format.html # show.html.erb
+          format.json { render json: @player }
         end
       else
         players.each do |player|

@@ -1,25 +1,6 @@
-<h1><%= @player.fullname %></h1>
-
-<%
-@player.match_type_player_ids.sort.each do |mtp_id|
-	mtp = MatchTypePlayer.find mtp_id
-
-	case mtp.type_number
-	when MatchType::TEST
-		table_type	= 'test'
-		match_type_name	= 'Test matches'
-	when MatchType::ODI
-		table_type	= 'odi'
-		match_type_name	= 'One-day internationals'
-	when MatchType::T20I
-		table_type	= 't20i'
-		match_type_name	= 'Twenty20 internationals'
-	end
-%>
-
-<table class="<%= table_type %> overall">
+<table class="test overall">
 	<caption>
-		<p><%= match_type_name %></p>
+		<p>Test matches</p>
 	</caption>
 
 	<tr>
@@ -33,14 +14,14 @@
 		<td><%= mtp.matchcount %></td>
 		<td><%= mtp.firstmatch %></td>
 		<td><%= mtp.lastmatch %></td>
-		<td><%= format '%.2f', mtp.xfactor unless mtp.xfactor.nil? %></td>
+		<td><%= format '%.2f', mtp.xfactor %></td>
 	</tr>
 </table>
 
 
-<table class="<%= table_type %> batting">
+<table class="test batting">
 	<caption>
-		<p>Batting</p>
+		<p>Test matches - batting</p>
 	</caption>
 
 	<tr>
@@ -59,7 +40,7 @@
 		<td><%= mtp.innings %></td>
 		<td><%= mtp.completed %></td>
 		<td><%= mtp.runs %></td>
-		<td><%= mtp.minutes %></td>
+		<td><%= mtp.mins %></td>
 		<td><%= mtp.balls %></td>
 		<td><%= mtp.fours %></td>
 		<td><%= mtp.sixes %></td>
@@ -68,9 +49,9 @@
 	</tr>
 </table>
 
-<table class="<%= table_type %> bowling">
+<table class="test bowling">
 	<caption>
-		<p>Bowling</p>
+		<p>Test matches - bowling</p>
 	</caption>
 
 	<tr>
@@ -88,15 +69,15 @@
 		<td><%= mtp.maidens %></td>
 		<td><%= mtp.runsconceded %></td>
 		<td><%= mtp.wickets %></td>
-		<td><%= format '%.2f', mtp.economy unless mtp.economy.nil? %></td>
-		<td><%= format '%.2f', mtp.bowl_average unless mtp.bowl_average.nil? %></td>
-		<td><%= format '%.2f', mtp.bowl_strikerate  unless mtp.bowl_strikerate.nil?%></td>
+		<td><%= format '%.2f', mtp.economy %></td>
+		<td><%= format '%.2f', mtp.bowl_average %></td>
+		<td><%= format '%.2f', mtp.bowl_strikerate %></td>
 	</tr>
 </table>
 
-<table class="<%= table_type %> fielding">
+<table class="test fielding">
 	<caption>
-		<p>Fielding</p>
+		<p>Test matches - bowling</p>
 	</caption>
 
 	<tr>
@@ -115,4 +96,3 @@
 		<td><%= mtp.catches %></td>
 	</tr>
 </table>
-<% end %>
