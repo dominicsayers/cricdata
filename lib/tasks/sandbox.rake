@@ -25,7 +25,7 @@ dputs match_ref, :white # debug
 
       doc = Nokogiri::HTML(Zlib::Inflate.inflate(raw_match.zhtml.to_s))
 
-      # Check batting columns
+      # Check which columns are available
       # Innings header
       # We don't know which batting stats were recorded for this innings
       inning_nodeset  = doc.xpath("//tr[@class='inningsHead']")

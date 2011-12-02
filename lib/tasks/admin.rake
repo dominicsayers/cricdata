@@ -21,6 +21,17 @@ namespace :admin do
       dputs 'done.'
   end
 
+  task :update_xfactor => :environment do
+    $\ = ' '
+
+		dputs 'Updating all X-factors...'
+		MatchTypePlayer.all.each do |mtp|
+			dprint mtp.fullname, :cyan
+			MatchTypePlayer.update_xfactor mtp
+		end
+		dputs 'done.'
+  end
+
   task :fix_missing_players => :environment do
       dputs 'Finding unknown players who have performances...'
 

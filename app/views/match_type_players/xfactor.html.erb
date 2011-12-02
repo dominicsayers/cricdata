@@ -1,19 +1,24 @@
-<h1>The world's best all-rounders</h1>
+<h1>The world's best all-rounders - <%= @rubric[:title] %></h1>
 
 <table class="xfactor">
   <caption>
-    <p>Post-war all-rounders in test matches</p>
-    <p>Qualification: 500 runs at better than 30, 50 wickets at better than 35</p>
-    <p>X-factor: Batting ave. over 30 + bowling ave. under 35 + catches per match</p>
+    <p><%= @rubric[:clarification] %></p>
+    <p><%= @rubric[:qualification] %></p>
+    <p><%= @rubric[:xfactor] %></p>
   </caption>
 
   <tr>
     <th class="name">Player</th>
     <th>Matches</th>
+    <th>Comp Inns</th>
+    <th>Balls</th>
     <th>Runs</th>
     <th>Bat ave</th>
+    <th>Bat SR</th>
     <th>Wickets</th>
     <th>Bowl ave</th>
+    <th>Bowl SR</th>
+    <th>Econ</th>
     <th>Catches</th>
     <th>X-factor</th>
   </tr>
@@ -22,10 +27,15 @@
   <tr>
     <td class="name"><%= link_to mtp.fullname, mtp %></td>
     <td><%= mtp.matchcount %></td>
+    <td><%= mtp.completed %></td>
+    <td><%= mtp.balls %></td>
     <td><%= mtp.runs %></td>
     <td><%= format '%.2f', mtp.bat_average %></td>
+    <td><%= format '%.2f', mtp.bat_strikerate %></td>
     <td><%= mtp.wickets %></td>
     <td><%= format '%.2f', mtp.bowl_average %></td>
+    <td><%= format '%.2f', mtp.bowl_strikerate %></td>
+    <td><%= format '%.2f', mtp.economy %></td>
     <td><%= mtp.catches %></td>
     <td><%= format '%.2f', mtp.xfactor %></td>
   </tr>

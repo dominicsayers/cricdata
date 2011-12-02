@@ -47,6 +47,7 @@ class MatchTypePlayer
   key :type_number, :player_ref
   index [ [:player_ref, Mongo::ASCENDING], [:type_number, Mongo::ASCENDING] ], unique: true
   index [ [:type_number, Mongo::ASCENDING], [:player_ref, Mongo::ASCENDING] ], unique: true
+  index [ [:type_number, Mongo::ASCENDING], [:xfactor, Mongo::DESCENDING] ]
 
   # Validations
 
@@ -54,9 +55,7 @@ class MatchTypePlayer
   scope :dirty, where(dirty: true)
   scope :clean, where(dirty: false)
   scope :indeterminate, where(:dirty.exists => false)
-
-  scope :xfactory, where(:lastmatch.gte => Date.new(1945), type_number:1, :runs.gte => 500, :bat_average.gte => 30, :wickets.gte => 50, :bowl_average.lte => 35).desc(:xfactor)
-  scope :xfactoryodi, where(type_number:2, :runs.gte => 500, :bat_average.gte => 30, :wickets.gte => 50, :bowl_average.lte => 35).desc(:xfactor)
+  scope :xfactory, where(:xfactor.ne => nil).desc(:xfactor)
 
   # Relationships
   belongs_to :player
@@ -169,16 +168,22 @@ dp player, :pink # debug
             end
 
             lastmatch       = match.date_end
-            inning_number   = subnodes[5].children.first.content
-            inning          = match.innings.find_or_create_by inning_number: inning_number
-            performance     = inning.performances.find_or_create_by match_type_player_id: match_type_player_id
+            dismissals      = subnodes[0].children.first.content
 
-            performance.dismissals    = subnodes[0].children.first.content
-            performance.catches_total = subnodes[1].children.first.content
-            performance.stumpings     = subnodes[2].children.first.content
-            performance.catches_wkt   = subnodes[3].children.first.content
-            performance.catches       = subnodes[4].children.first.content
-            performance.save
+            if /\d+/.match(dismissals) # Ignore TDNF, DNF etc.
+              inning_number   = subnodes[5].children.first.content
+              inning          = match.innings.find_or_create_by inning_number: inning_number
+              performance     = inning.performances.find_or_create_by match_type_player_id: match_type_player_id
+
+              performance.dismissals    = dismissals
+              performance.catches_total = subnodes[1].children.first.content
+              performance.stumpings     = subnodes[2].children.first.content
+              performance.catches_wkt   = subnodes[3].children.first.content
+              performance.catches       = subnodes[4].children.first.content
+              performance.save
+            else
+              dputs dismissals, :cyan
+            end
           end
         end
       end
@@ -188,6 +193,54 @@ dp player, :pink # debug
       mtp.lastmatch = lastmatch
       mtp.save
     end
+  end
+
+  #----------------------------------------------------------------------------
+  # Update X-factor from batting, bowling & fielding stats
+  def self::update_xfactor mtp
+    if mtp.matchcount.nil? || mtp.bat_average.nil? || mtp.bowl_average.nil?
+dprint 'No average' # debug
+      mtp.unset(:xfactor)
+    else
+      case mtp.type_number
+      when MatchType::TEST
+dprint 'Test' # debug
+        if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 50 || mtp.bowl_average > 35 || mtp.lastmatch < Date.new(1945)
+          # Doesn't qualify
+          mtp.unset(:xfactor)
+        else
+          # Test X-factor
+          mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
+        end
+      when MatchType::ODI
+dprint 'ODI' # debug
+        if mtp.runs < 500 || mtp.bat_average < 20 || mtp.wickets < 50
+          # Doesn't qualify
+          mtp.unset(:xfactor)
+        else
+          # ODI X-factor
+          #             Compare batting strikerate with economy        Compare balls faced per innings with bowling strikerate    Add catches per match
+          mtp.xfactor = mtp.bat_strikerate - (mtp.economy * 100 / 6) + (mtp.balls / mtp.completed) - mtp.bowl_strikerate          + (mtp.catches / mtp.matchcount)
+        end
+      when MatchType::T20I
+dprint 'T20I' # debug
+        if mtp.runs < 150 || mtp.bat_average < 10 || mtp.wickets < 15
+          # Doesn't qualify
+          mtp.unset(:xfactor)
+        else
+          # T20I X-factor
+          #             Compare batting strikerate with economy        Compare balls faced per innings with bowling strikerate    Add catches per match
+          mtp.xfactor = mtp.bat_strikerate - (mtp.economy * 100 / 6) + (mtp.balls / mtp.completed) - mtp.bowl_strikerate          + (mtp.catches / mtp.matchcount)
+        end
+      else
+        dprint "Unknown match type: #{mtp.type_number}", :red
+      end
+    end
+
+dprint "[#{mtp.matchcount}|#{mtp.runs}|#{mtp.bat_average}|#{mtp.wickets}|#{mtp.bowl_average}|#{mtp.catches}|#{mtp.bowl_strikerate}|#{mtp.economy}]", :pink # debug
+dputs mtp.xfactor.nil? ? "X" : mtp.xfactor, :white # debug
+
+    mtp.save
   end
 
   #----------------------------------------------------------------------------
@@ -364,34 +417,7 @@ dputs "#{mtp.name} (#{match_type_player_id})", :white # debug
 #-dputs mtp.inspect # debug
 
     # X-factor
-    if mtp.matchcount.nil? || mtp.bat_average.nil? || mtp.bowl_average.nil?
-      mtp.unset(:xfactor)
-    else
-      case mtp.type_number
-      when MatchType::TEST
-#-dprint 'Test' # debug
-        if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
-          # Doesn't qualify
-          mtp.unset(:xfactor)
-        else
-          # Test X-factor
-          mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
-        end
-      when MatchType::ODI
-#-dprint 'ODI' # debug
-        if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 5 || mtp.bowl_average > 35 || mtp.lastmatch > Date.new(1945)
-          # Doesn't qualify
-          mtp.unset(:xfactor)
-        else
-          # ODI X-factor
-          mtp.xfactor = mtp.bat_strikerate + mtp.bat_average + 50 - mtp.bowl_strikerate - (30 * mtp.economy) + (mtp.catches / mtp.matchcount)
-        end
-      when MatchType::T20I
-#-dprint 'T20I' # debug
-        # T20I X-factor
-        mtp.xfactor = mtp.bat_strikerate + (5 * mtp.bat_average / 4) - 5 - (5 * (mtp.bowl_strikerate - (2 * mtp.economy))) + (mtp.catches / mtp.matchcount)
-      end
-    end
+    self::update_xfactor mtp
 
     # Control
     mtp.dirty            = false
