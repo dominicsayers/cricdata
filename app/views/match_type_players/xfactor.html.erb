@@ -25,7 +25,7 @@
 
   <% @mtps.each do |mtp| %>
   <tr>
-    <td class="name"><%= link_to mtp.fullname, mtp %></td>
+    <td class="name"><%= link_to mtp.fullname, mtp.player %></td>
     <td><%= mtp.matchcount %></td>
     <td><%= mtp.completed %></td>
     <td><%= mtp.balls %></td>

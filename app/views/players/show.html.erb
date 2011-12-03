@@ -1,4 +1,5 @@
-<h1><%= @player.fullname %></h1>
+<div class="player">
+	<h1><%= @player.fullname %></h1>
 
 <%
 @player.match_type_player_ids.sort.each do |mtp_id|
@@ -6,113 +7,107 @@
 
 	case mtp.type_number
 	when MatchType::TEST
-		table_type	= 'test'
-		match_type_name	= 'Test matches'
+		match_type_class = 'test'
+		match_type_name  = 'Test matches'
 	when MatchType::ODI
-		table_type	= 'odi'
-		match_type_name	= 'One-day internationals'
+		match_type_class = 'odi'
+		match_type_name	 = 'One-day internationals'
 	when MatchType::T20I
-		table_type	= 't20i'
-		match_type_name	= 'Twenty20 internationals'
+		match_type_class = 't20i'
+		match_type_name	 = 'Twenty20 internationals'
 	end
 %>
+	<div class="match-type <%= match_type_class %>">
+		<table class="overall">
+			<caption><%= match_type_name %></caption>
 
-<table class="<%= table_type %> overall">
-	<caption>
-		<p><%= match_type_name %></p>
-	</caption>
+			<tr>
+				<th>Matches</th>
+				<th>Debut</th>
+				<th>Last match</th>
+				<th>X-factor</th>
+			</tr>
 
-	<tr>
-		<th>Matches</th>
-		<th>Debut</th>
-		<th>Last match</th>
-		<th>X-factor</th>
-	</tr>
-
-	<tr>
-		<td><%= mtp.matchcount %></td>
-		<td><%= mtp.firstmatch %></td>
-		<td><%= mtp.lastmatch %></td>
-		<td><%= format '%.2f', mtp.xfactor unless mtp.xfactor.nil? %></td>
-	</tr>
-</table>
+			<tr>
+				<td><%= mtp.matchcount %></td>
+				<td><%= mtp.firstmatch %></td>
+				<td><%= mtp.lastmatch %></td>
+				<td><%= format '%.2f', mtp.xfactor unless mtp.xfactor.nil? %></td>
+			</tr>
+		</table>
 
 
-<table class="<%= table_type %> batting">
-	<caption>
-		<p>Batting</p>
-	</caption>
+		<table class="batting">
+			<caption>Batting</caption>
 
-	<tr>
-		<th>Inns</th>
-		<th>Comp Inns</th>
-		<th>Runs</th>
-		<th>Mins</th>
-		<th>Balls</th>
-		<th>4s</th>
-		<th>6s</th>
-		<th>Ave</th>
-		<th>SR</th>
-	</tr>
+			<tr>
+				<th>Inns</th>
+				<th>Comp Inns</th>
+				<th>Runs</th>
+				<th>Mins</th>
+				<th>Balls</th>
+				<th>4s</th>
+				<th>6s</th>
+				<th>Ave</th>
+				<th>SR</th>
+			</tr>
 
-	<tr>
-		<td><%= mtp.innings %></td>
-		<td><%= mtp.completed %></td>
-		<td><%= mtp.runs %></td>
-		<td><%= mtp.minutes %></td>
-		<td><%= mtp.balls %></td>
-		<td><%= mtp.fours %></td>
-		<td><%= mtp.sixes %></td>
-		<td><%= format '%.2f', mtp.bat_average %></td>
-		<td><%= format '%.2f', mtp.bat_strikerate %></td>
-	</tr>
-</table>
+			<tr>
+				<td><%= mtp.innings %></td>
+				<td><%= mtp.completed %></td>
+				<td><%= mtp.runs %></td>
+				<td><%= mtp.minutes %></td>
+				<td><%= mtp.balls %></td>
+				<td><%= mtp.fours %></td>
+				<td><%= mtp.sixes %></td>
+				<td><%= format '%.2f', mtp.bat_average %></td>
+				<td><%= format '%.2f', mtp.bat_strikerate %></td>
+			</tr>
+		</table>
 
-<table class="<%= table_type %> bowling">
-	<caption>
-		<p>Bowling</p>
-	</caption>
+		<table class="bowling">
+			<caption>Bowling</caption>
 
-	<tr>
-		<th>Overs</th>
-		<th>Maidens</th>
-		<th>Runs</th>
-		<th>Wickets</th>
-		<th>Econ</th>
-		<th>Bowl ave</th>
-		<th>Bowl SR</th>
-	</tr>
+			<tr>
+				<th>Overs</th>
+				<th>Maidens</th>
+				<th>Runs</th>
+				<th>Wickets</th>
+				<th>Econ</th>
+				<th>Bowl ave</th>
+				<th>Bowl SR</th>
+			</tr>
 
-	<tr>
-		<td><%= mtp.overs_string %></td>
-		<td><%= mtp.maidens %></td>
-		<td><%= mtp.runsconceded %></td>
-		<td><%= mtp.wickets %></td>
-		<td><%= format '%.2f', mtp.economy unless mtp.economy.nil? %></td>
-		<td><%= format '%.2f', mtp.bowl_average unless mtp.bowl_average.nil? %></td>
-		<td><%= format '%.2f', mtp.bowl_strikerate  unless mtp.bowl_strikerate.nil?%></td>
-	</tr>
-</table>
+			<tr>
+				<td><%= mtp.overs_string %></td>
+				<td><%= mtp.maidens %></td>
+				<td><%= mtp.runsconceded %></td>
+				<td><%= mtp.wickets %></td>
+				<td><%= format '%.2f', mtp.economy unless mtp.economy.nil? %></td>
+				<td><%= format '%.2f', mtp.bowl_average unless mtp.bowl_average.nil? %></td>
+				<td><%= format '%.2f', mtp.bowl_strikerate  unless mtp.bowl_strikerate.nil?%></td>
+			</tr>
+		</table>
 
-<table class="<%= table_type %> fielding">
-	<caption>
-		<p>Fielding</p>
-	</caption>
+		<table class="fielding">
+			<caption>Fielding</caption>
 
-	<tr>
-		<th>Dismissals</th>
-		<th>Stumpings</th>
-		<th>Total catches</th>
-		<th>Catch wkt</th>
-		<th>Catch fld</th>
-	</tr>
+			<tr>
+				<th>Dismissals</th>
+				<th>Stumpings</th>
+				<th>Total catches</th>
+				<th>Catch wkt</th>
+				<th>Catch fld</th>
+			</tr>
 
-	<tr>
-		<td><%= mtp.dismissals %></td>
-		<td><%= mtp.stumpings %></td>
-		<td><%= mtp.catches_total %></td>
-		<td><%= mtp.catches_wkt %></td>
-		<td><%= mtp.catches %></td>
-	</tr>
-</table>
+			<tr>
+				<td><%= mtp.dismissals %></td>
+				<td><%= mtp.stumpings %></td>
+				<td><%= mtp.catches_total %></td>
+				<td><%= mtp.catches_wkt %></td>
+				<td><%= mtp.catches %></td>
+			</tr>
+		</table>
+	</div>
 <% end %>
+</div>

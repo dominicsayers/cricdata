@@ -4,7 +4,7 @@ Cricdata::Application.routes.draw do
 #-  resources :t20i, :controller => 'match_types'
 
   scope ':match_type_name' do
-    resources :players do
+    resources :players, :only => [:xfactor] do
       get 'xfactor', :on => :collection
     end
   end
