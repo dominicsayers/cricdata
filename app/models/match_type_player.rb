@@ -93,38 +93,6 @@ dputs player_ref, :cyan # debug
       end
     end
 
-    # Update Player document
-    # Scorecard name (master document)
-    slug    = mtp.name.parameterize
-    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
-    player.master_ref = player_ref
-    player.name       = mtp.name
-    player.fullname   = mtp.fullname
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, mtp._id
-dp player, :pink # debug
-    player.save
-
-    mtp.player = player
-    mtp.save
-
-    # Full name
-    slug    = mtp.fullname.parameterize
-    player  = Player.find_or_create_by slug:slug
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, mtp._id
-    player.save
-
-    # Name parts
-    nameparts = mtp.fullname.split(' ')
-
-    nameparts.each do |subslug|
-      slug    = subslug.parameterize
-      player  = Player.find_or_create_by slug:slug
-      player.add_to_set :player_refs, mtp.player_ref
-      player.save
-    end
-
     # Process fielding data
     nodeset = doc.xpath('//tr[@class="data1"]')
     lastmatch = 0
@@ -244,10 +212,49 @@ dputs mtp.xfactor.nil? ? "X" : mtp.xfactor, :white # debug
   end
 
   #----------------------------------------------------------------------------
+  # Update Player document from name(s)
+  def self::update_name mtp
+    player_ref = mtp.player_ref
+    
+    # Update Player document
+    # Scorecard name (master document)
+    slug    = mtp.name.parameterize
+    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+    player.master_ref = player_ref
+    player.name       = mtp.name
+    player.fullname   = mtp.fullname
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, mtp._id
+dp player, :pink # debug
+    player.save
+
+    mtp.player = player
+    mtp.save
+
+    # Full name
+    slug    = mtp.fullname.parameterize
+    player  = Player.find_or_create_by slug:slug
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, mtp._id
+    player.save
+
+    # Name parts
+    nameparts = mtp.fullname.split(' ')
+
+    nameparts.each do |subslug|
+      slug    = subslug.parameterize
+      player  = Player.find_or_create_by slug:slug
+      player.add_to_set :player_refs, player_ref
+      player.save
+    end
+  end
+
+  #----------------------------------------------------------------------------
   # Update cumulative statistics from performance data
-  def self::update_statistics mtp
+  def self::update_statistics mtp, do_fielding=true
     # Get fielding statistics
-    self::get_fielding_statistics mtp
+    self::get_fielding_statistics mtp if do_fielding
+    self::update_name mtp
 
     # Process performance data
     match_type_player_id     = mtp._id

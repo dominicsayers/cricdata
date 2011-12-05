@@ -7,6 +7,7 @@ include Fetch
 
 namespace :migrate do
 	namespace :v1 do
+		desc "This task is run to upgrade the schema from v1 to v2"
 		task :default => :environment do
 			dputs 'Migrating...'
 

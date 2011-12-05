@@ -6,8 +6,21 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :update_players_no_fielding => :environment do
+    $\ = ' '
+
+    # Mark all players dirty
+		MatchTypePlayer.all.update_all(dirty:true)
+
+    # Update players without refetching fielding data
+    MatchTypePlayer.dirty.each do |mtp|
+      MatchTypePlayer::update_statistics mtp, false
+    end
+
+  end
+
   task :new_stats => :environment do
-      $\ = ' '
+    $\ = ' '
 
     Performance.destroy_all
 
