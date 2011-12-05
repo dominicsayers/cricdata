@@ -9,46 +9,46 @@ dp params # debug
 
     begin
       # Look for player with this id
-      @player = Player.find(@slug)
-
-      respond_to do |format|
-        format.html # show.html.erb
-        format.json { render json: @player }
-      end
+      players       = [Player.find(@slug)]
     rescue
       # Couldn't find a matching player, so search by slug
-      @player_refs = []
-
       if /\d+/.match @slug
         players = Player.where(master_ref: @slug)
       else
         players = Player.where(slug: @slug)
         players = Player.where(slug: /^#{@slug}/) if players.length == 0
       end
+    end
 
-      case players.length
-      when 0
-        @message = {:error => 'No matching players'}
+    if players.length == 0
+      @message = {:error => 'No matching players'}
 
-        respond_to do |format|
-          format.html { render 'empty' }
-          format.json { render json: @message }
-        end
-      when 1
-        @player = players.first
+      respond_to do |format|
+        format.html { render 'empty' }
+        format.json { render json: @message }
+      end
+    else
+      player_refs = []
+
+      # Collate all players found
+      players.each do |player|
+        player_refs = player_refs | player.player_refs
+      end
+
+      if player_refs.length == 1
+        # Get canonical player (this may simply be a unique name part)
+        @player = Player.where(master_ref: player_refs.first).first
 
         respond_to do |format|
           format.html # show.html.erb
           format.json { render json: @player }
         end
       else
-        players.each do |player|
-          @player_refs = @player_refs | player.player_refs
-        end
+        @players = Player.where(:master_ref.in => player_refs).asc(:fullname)
 
         respond_to do |format|
           format.html { render 'list' }
-          format.json { render json: @player_refs }
+          format.json { render json: @players }
         end
       end
     end

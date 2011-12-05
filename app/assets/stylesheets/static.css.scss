@@ -1,0 +1,27 @@
+// Place all the styles related to the Static controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+div.api {
+	margin: 1em;
+
+	table {
+		border-collapse: separate;
+		border-spacing: 2px;
+		margin-bottom: 1em;
+
+		td, th	{
+			min-width: 38px;
+			text-align: left;
+			padding: 4px;
+			background-color: #eee;
+		}
+
+		tr.title td	{border-top:1em solid #fff;}
+		caption		{text-align: left;font-weight: bold;}
+		h3		{margin:4px 0;}
+		a		{text-decoration: none;}
+		a:hover		{background-color: #fff;}
+		.optional	{color:#666;}
+		.example	{color:#393;}
+	}
+}

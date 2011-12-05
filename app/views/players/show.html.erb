@@ -1,5 +1,6 @@
 <div class="player">
 	<h1><%= @player.fullname %></h1>
+	<p>(<%= @player.name %>)</p>
 
 <%
 @player.match_type_player_ids.sort.each do |mtp_id|
