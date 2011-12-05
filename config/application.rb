@@ -49,5 +49,8 @@ module Cricdata
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
+
+    # Fix for modernizr issue in Heroku
+    config.assets.precompile += %w( modernizr.js )
   end
 end
