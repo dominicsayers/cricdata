@@ -33,7 +33,7 @@
 				<td><%= mtp.matchcount %></td>
 				<td><%= mtp.firstmatch %></td>
 				<td><%= mtp.lastmatch %></td>
-				<td><%= format '%.2f', mtp.xfactor unless mtp.xfactor.nil? %></td>
+				<td><%= format '%.2f', mtp.xfactor	unless mtp.xfactor.nil? %></td>
 			</tr>
 		</table>
 
@@ -61,8 +61,8 @@
 				<td><%= mtp.balls %></td>
 				<td><%= mtp.fours %></td>
 				<td><%= mtp.sixes %></td>
-				<td><%= format '%.2f', mtp.bat_average %></td>
-				<td><%= format '%.2f', mtp.bat_strikerate %></td>
+				<td><%= format '%.2f', mtp.bat_average		unless mtp.bat_average.nil? %></td>
+				<td><%= format '%.2f', mtp.bat_strikerate	unless mtp.bat_strikerate.nil? %></td>
 			</tr>
 		</table>
 
@@ -84,9 +84,9 @@
 				<td><%= mtp.maidens %></td>
 				<td><%= mtp.runsconceded %></td>
 				<td><%= mtp.wickets %></td>
-				<td><%= format '%.2f', mtp.economy unless mtp.economy.nil? %></td>
-				<td><%= format '%.2f', mtp.bowl_average unless mtp.bowl_average.nil? %></td>
-				<td><%= format '%.2f', mtp.bowl_strikerate  unless mtp.bowl_strikerate.nil?%></td>
+				<td><%= format '%.2f', mtp.economy		unless mtp.economy.nil? %></td>
+				<td><%= format '%.2f', mtp.bowl_average		unless mtp.bowl_average.nil? %></td>
+				<td><%= format '%.2f', mtp.bowl_strikerate	unless mtp.bowl_strikerate.nil?%></td>
 			</tr>
 		</table>
 
