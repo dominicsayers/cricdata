@@ -6,6 +6,16 @@ include ConsoleLog
 include Fetch
 
 namespace :sandbox do
+  task :match_age => :environment do
+    $\ = ' '
+
+    Match.all.each do |match|
+      dprint match.serial
+      dprint match.date_end
+      dprint 1.week.ago.to_date
+      dputs match.date_end < 1.week.ago.to_date ? 'Old match' : 'Recent match'
+    end
+  end
   task :update_players_no_fielding => :environment do
     $\ = ' '
 
