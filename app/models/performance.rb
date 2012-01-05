@@ -33,8 +33,15 @@ class Performance
   field :cum_strikerate,  :type => Float
   field :cum_economy,     :type => Float
 
+  # Reporting
+  field :type_number,     :type => Integer
+  field :date_start,      :type => Date
+  field :name,            :type => String
+
+  # Indexes
   index([ [:inning_id, Mongo::ASCENDING], [:match_type_player_id, Mongo::ASCENDING] ], unique: true)
   index([ [:match_type_player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
+  index([ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING] ], unique: false)
   index :runs
 
   # Validations

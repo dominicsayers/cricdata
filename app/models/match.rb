@@ -230,6 +230,10 @@ dp p, :white
           performance.howout        = p[:howout]
           performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
 
+          performance.type_number   = type_number
+          performance.date_start    = @match.date_start
+          performance.name          = p[:name]
+
           performance.save
 dp performance
         end

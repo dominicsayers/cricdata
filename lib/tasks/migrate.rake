@@ -6,6 +6,37 @@ include ConsoleLog
 include Fetch
 
 namespace :migrate do
+	namespace :v2 do
+		desc "This task is run to upgrade the schema from v2 to v3"
+		task :default => :environment do
+			dputs 'Migrating...'
+
+			$\ = ' '
+
+			# Add match type, start date and player's name to performances
+			# rake db:mongoid:create_indexes RAILS_ENV=test
+
+			Performance.where(:runs.exists => true, :type_number.exists => false).each do |pf|
+				dprint pf.type_number, :red
+				dprint pf.runs
+				dprint pf.inning_id
+				inning = Inning.find pf.inning_id
+				dprint inning.match_id
+				match = Match.find inning.match_id
+				dprint match.date_start
+				dprint pf.match_type_player_id
+				player = MatchTypePlayer.find pf.match_type_player_id
+				dprint player.name
+				dputs player.type_number
+
+				pf.type_number	= player.type_number
+				pf.date_start		= match.date_start
+				pf.name					= player.name
+				pf.save
+			end
+		end
+	end
+
 	namespace :v1 do
 		desc "This task is run to upgrade the schema from v1 to v2"
 		task :default => :environment do

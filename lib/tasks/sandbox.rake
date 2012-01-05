@@ -1,11 +1,36 @@
 require 'net/http'
+require 'mongo'
 require "#{Rails.root}/app/helpers/console_log"
 require "#{Rails.root}/app/helpers/fetch"
 
 include ConsoleLog
 include Fetch
+include Mongo
 
 namespace :sandbox do
+  task :scores => :environment do
+    $\ = ' '
+
+		# Using mongo gem directly because of the size of the result set
+		db = Connection.new.db('cricdata_development')
+		pfs = db.collection('performances')
+
+		pfs.find(:type_number => {'$exists' => true}).sort( [ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING] ] ).each do |pf|
+				dprint pf['type_number']
+				dprint pf['date_start']
+				dputs pf['runs']
+
+		end
+
+#		for type_number in 1..3
+#			Performance.where(type_number:type_number).asc(:runs, :date_start).each do |pf|
+#				dprint pf.type_number
+#				dprint pf.date_start
+#				dputs pf.runs
+#			end
+#		end
+  end
+
   task :match_age => :environment do
     $\ = ' '
 
@@ -16,6 +41,7 @@ namespace :sandbox do
       dputs match.date_end < 1.week.ago.to_date ? 'Old match' : 'Recent match'
     end
   end
+
   task :update_players_no_fielding => :environment do
     $\ = ' '
 

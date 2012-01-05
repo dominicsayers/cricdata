@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  runs: 1
+  name: MyString
+  match_ref: MyString
+  current_lowest_unscored: false
+  has_been_lowest_unscored: false
+
+two:
+  runs: 1
+  name: MyString
+  match_ref: MyString
+  current_lowest_unscored: false
+  has_been_lowest_unscored: false
