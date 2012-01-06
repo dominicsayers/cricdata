@@ -41,7 +41,7 @@ class Performance
   # Indexes
   index([ [:inning_id, Mongo::ASCENDING], [:match_type_player_id, Mongo::ASCENDING] ], unique: true)
   index([ [:match_type_player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
-  index([ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING] ], unique: false)
+  index([ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ], unique: false)
   index :runs
 
   # Validations

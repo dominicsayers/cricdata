@@ -1,0 +1,2 @@
+class IndividualScoresController < ApplicationController
+end

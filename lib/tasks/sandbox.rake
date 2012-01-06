@@ -11,24 +11,33 @@ namespace :sandbox do
   task :scores => :environment do
     $\ = ' '
 
+		IndividualScore.destroy_all
+		
+		# Seed the benchmark scores
+		for type_number in 1..3
+			in_sc														= IndividualScore.find_or_create_by type_number:type_number, runs:0
+      in_sc.unscored                  = true
+      in_sc.current_lowest_unscored   = true
+      in_sc.has_been_lowest_unscored  = true
+			in_sc.save
+		end
+
+		type_number	= MatchType::NONE
+		runs				= -1
+
 		# Using mongo gem directly because of the size of the result set
 		db = Connection.new.db('cricdata_development')
 		pfs = db.collection('performances')
 
-		pfs.find(:type_number => {'$exists' => true}).sort( [ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING] ] ).each do |pf|
-				dprint pf['type_number']
-				dprint pf['date_start']
-				dputs pf['runs']
+		pfs.find(:type_number => {'$exists' => true}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
+			dprint pf['type_number']
+			dprint pf['date_start']
+			dprint pf['runs']
+			dprint pf['name']
 
+			IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
+dputs ' ' # debug
 		end
-
-#		for type_number in 1..3
-#			Performance.where(type_number:type_number).asc(:runs, :date_start).each do |pf|
-#				dprint pf.type_number
-#				dprint pf.date_start
-#				dputs pf.runs
-#			end
-#		end
   end
 
   task :match_age => :environment do
