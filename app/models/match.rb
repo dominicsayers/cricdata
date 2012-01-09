@@ -236,6 +236,8 @@ dp p, :white
 
           performance.save
 dp performance
+
+#debug          IndividualScore.register type_number, performance.runs, @match.date_start, p[:name]
         end
 
         inning.save

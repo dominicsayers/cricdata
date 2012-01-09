@@ -1,14 +1,38 @@
 require 'net/http'
+require 'mongo'
 require "#{Rails.root}/app/helpers/console_log"
 require "#{Rails.root}/app/helpers/fetch"
 
 include ConsoleLog
 include Fetch
+include Mongo
 
 namespace :migrate do
 	namespace :v2 do
 		desc "This task is run to upgrade the schema from v2 to v3"
-		task :default => :environment do
+		task :fix_performances => :environment do
+			$\ = ' '
+
+			old_match_ref = 0
+
+			Performance.where(:match_type_player_id.exists => false).asc(:inning_id).each do |pf|
+				match_ref = pf.inning.match_id
+
+				if match_ref != old_match_ref
+					old_match_ref = match_ref
+	dputs match_ref
+					Match.parse match_ref
+				else
+					dputs match_ref, :pink # debug
+				end
+			end
+		end
+
+		# then
+		# rake regular:update_dirty_players RAILS_ENV=test
+		# db.performances.remove({match_type_player_id:{$exists:false}})
+
+		task :performances => :environment do
 			dputs 'Migrating...'
 
 			$\ = ' '
@@ -33,6 +57,41 @@ namespace :migrate do
 				pf.date_start		= match.date_start
 				pf.name					= player.name
 				pf.save
+			end
+		end
+
+		task :scores => :environment do
+			$\ = ' '
+
+			# rake db:mongoid:create_indexes RAILS_ENV=test
+
+			IndividualScore.destroy_all
+
+			# Seed the benchmark scores
+			for type_number in 1..3
+				in_sc														= IndividualScore.find_or_create_by type_number:type_number, runs:0
+				in_sc.unscored                  = true
+				in_sc.current_lowest_unscored   = true
+				in_sc.has_been_lowest_unscored  = true
+				in_sc.save
+			end
+
+			type_number	= MatchType::NONE
+			runs				= -1
+
+			# Using mongo gem directly because of the size of the result set
+	    db_name	= [ 'test', 'production' ].include?(ENV['RAILS_ENV']) ? 'cricdata' : 'cricdata_development'
+			db 			= Connection.new.db db_name
+			pfs			= db.collection('performances')
+
+			pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
+				dprint pf['type_number']
+				dprint pf['date_start']
+				dprint pf['runs']
+				dprint pf['name']
+
+				IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
+	dputs ' ' # debug
 			end
 		end
 	end

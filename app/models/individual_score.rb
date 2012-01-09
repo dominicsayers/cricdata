@@ -21,38 +21,11 @@ class IndividualScore
   belongs_to :inning
 
   # Helpers
-#  # Return the lowest unscored number of runs
-#  def self::lowest_unscored type_number=MatchType::TEST
-#    type_scores = self.where type_number:type_number
-#dputs type_scores.length # debug
-#    in_scs = type_scores.where current_lowest_unscored:true
-#dputs in_scs.length # debug
-#
-#    if in_scs.length == 0
-#      in_sc                 = type_scores.max(:runs)
-#      lowest_unscored_runs  = in_sc.blank? ? 0 : in_sc.runs + 1
-#dp in_sc # debug
-#      in_sc                 = self.find_or_create_by type_number:type_number, runs:lowest_unscored_runs
-#
-#      in_sc.current_lowest_unscored  = true
-#      in_sc.has_been_lowest_unscored = true
-#      in_sc.save
-#    else
-#      lowest_unscored_runs = in_scs.first.runs
-#    end
-#
-#dputs lowest_unscored_runs # debug
-#    lowest_unscored_runs
-#  end
-
   # Register an individual score
   def self::register type_number, runs, date_start, name
 $\ = ' ' # debug
 
-dputs 'Registering'
-
     in_sc_max  = self.where(type_number:type_number).asc(:runs).last
-dp in_sc_max # debug
 
     if in_sc_max.blank?
       # Seed the collection
@@ -64,7 +37,7 @@ dp in_sc_max # debug
     end
 
     max_runs    = in_sc_max.runs
-dprint max_runs # debug
+dprint max_runs, :cyan # debug
 
     if runs > max_runs
       # Fill in any gaps
