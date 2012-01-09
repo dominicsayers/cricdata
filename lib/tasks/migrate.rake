@@ -80,16 +80,20 @@ namespace :migrate do
 			runs				= -1
 
 			# Using mongo gem directly because of the size of the result set
-		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
-			hostname	= 'burdett.moo.li'
-			db_name		= 'cricdata'
-		else
-			hostname	= 'localhost'
-			db_name		= 'cricdata_development'
-		end
+			case ENV['RAILS_ENV']
+			when 'test'
+				hostname	= 'burdett.moo.li'
+				db_name		= 'cricdata'
+			when 'production'
+				hostname	= 'localhost'
+				db_name		= 'cricdata'
+			else
+				hostname	= 'localhost'
+				db_name		= 'cricdata_development'
+			end
 
-		db 			= Connection.new(hostname).db db_name
-		pfs			= db.collection 'performances'
+			db 			= Connection.new(hostname).db db_name
+			pfs			= db.collection 'performances'
 
 			pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
 				dprint pf['type_number']
