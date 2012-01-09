@@ -1,0 +1,19 @@
+<h1>Individual scores - <%= @rubric[:title] %> - <%= params[:id] %></h1>
+
+<table class="performances">
+  <caption>
+    <p><%= @rubric[:clarification] %></p>
+  </caption>
+
+  <tr>
+    <th>Match start date</th>
+    <th>By</th>
+  </tr>
+
+  <% @performances.each do |pf| %>
+  <tr>
+	<td><%= pf.date_start %></td>
+	<td><%= link_to pf.name, pf.match_type_player.player %></td>
+  </tr>
+  <% end %>
+</table>

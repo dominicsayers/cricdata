@@ -1,17 +1,18 @@
 Cricdata::Application.routes.draw do
   root :to => 'static#api'
 
-  scope ':match_type_name' do
+  resources :players
+
+  scope ':match_type_name', :constraints => {:match_type_name => /test|odi|t20i/} do
     resources :players, :only => [:xfactor] do
       get 'xfactor', :on => :collection
     end
 
-    resources :scores, :only => [:individual, :team] do
-      get 'individual', 'team', :on => :collection
+    scope '/scores' do
+      resources :individual,  :controller => :individual_scores
+      resources :team,        :controller => :team_scores
     end
   end
-
-  resources :players
 
   match ':action' => 'static#:action'
 end

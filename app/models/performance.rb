@@ -47,9 +47,9 @@ class Performance
   # Validations
 
   # Scopes
-  default_scope asc(:inning_id, :match_type_player_id)
   scope :batting, where(:runs.exists => true)
   scope :bowling, where(:runs.exists => false)
+#  default_scope asc(:inning_id, :match_type_player_id)
 
   # Relationships
   belongs_to :match_type_player

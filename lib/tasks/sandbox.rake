@@ -8,6 +8,35 @@ include Fetch
 include Mongo
 
 namespace :sandbox do
+	task :scores => :environment do
+		$\ = ' '
+
+		type_number	= MatchType::NONE
+		runs				= -1
+
+		# Using mongo gem directly because of the size of the result set
+		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
+			hostname	= 'burdett.moo.li'
+			db_name		= 'cricdata'
+		else
+			hostname	= 'localhost'
+			db_name		= 'cricdata_development'
+		end
+		db 			= Connection.new(hostname).db db_name
+		pfs			= db.collection('performances')
+dputs db.connection.host
+dputs db_name
+
+		pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
+			dprint pf['type_number']
+			dprint pf['date_start']
+			dprint pf['runs']
+			dprint pf['name']
+
+#			IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
+dputs ' ' # debug
+		end
+	end
 
   task :env => :environment do
     dputs ENV['RAILS_ENV']

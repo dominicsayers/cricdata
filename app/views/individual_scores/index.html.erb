@@ -1,0 +1,38 @@
+<h1>Individual scores - <%= @rubric[:title] %></h1>
+
+<table class="scores">
+  <caption>
+    <p><%= @rubric[:clarification] %></p>
+    <p>Key:</p>
+    <p class="highest">Has been highest score &#10003;</p>
+    <p class="lowest">Has been lowest unscored score &#10003;</p>
+  </caption>
+
+  <tr>
+    <th class="score">Score</th>
+    <th>First scored</th>
+    <th>By</th>
+    <th>Lowest</th>
+    <th>Highest</th>
+  </tr>
+
+  <%
+  @individual_scores.each do |score|
+	td_class = score.unscored ? 'unscored' : 'scored'
+	td_class += ' lowest'	if score.has_been_lowest_unscored
+	td_class += ' highest'	if score.has_been_highest_score
+  %>
+  <tr>
+    <% if score.unscored %>
+	<td class="score <%= td_class %>"><%= score.runs %></td>
+	<td class="<%= td_class %>" colspan="2">Never been scored</td>
+    <% else %>
+	<td class="score <%= td_class %>"><%= link_to score.runs, individual_path(@rubric[:match_type_name], score.runs), :class => td_class %></td>
+	<td class="<%= td_class %>"><%= score.date_start %></td>
+	<td class="<%= td_class %>"><%= link_to score.name, score.player %></td>
+    <% end %>
+	<td class="<%= td_class %>"><%=raw score.has_been_lowest_unscored ? '&#10003;' : '' %></td>
+	<td class="<%= td_class %>"><%=raw score.has_been_highest_score ? '&#10003;' : '' %></td>
+  </tr>
+  <% end %>
+</table>

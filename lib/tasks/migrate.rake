@@ -69,20 +69,27 @@ namespace :migrate do
 
 			# Seed the benchmark scores
 			for type_number in 1..3
-				in_sc														= IndividualScore.find_or_create_by type_number:type_number, runs:0
-				in_sc.unscored                  = true
-				in_sc.current_lowest_unscored   = true
-				in_sc.has_been_lowest_unscored  = true
-				in_sc.save
+				score														= IndividualScore.find_or_create_by type_number:type_number, runs:0
+				score.unscored                  = true
+				score.current_lowest_unscored   = true
+				score.has_been_lowest_unscored  = true
+				score.save
 			end
 
 			type_number	= MatchType::NONE
 			runs				= -1
 
 			# Using mongo gem directly because of the size of the result set
-	    db_name	= [ 'test', 'production' ].include?(ENV['RAILS_ENV']) ? 'cricdata' : 'cricdata_development'
-			db 			= Connection.new.db db_name
-			pfs			= db.collection('performances')
+		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
+			hostname	= 'burdett.moo.li'
+			db_name		= 'cricdata'
+		else
+			hostname	= 'localhost'
+			db_name		= 'cricdata_development'
+		end
+
+		db 			= Connection.new(hostname).db db_name
+		pfs			= db.collection 'performances'
 
 			pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
 				dprint pf['type_number']
@@ -90,7 +97,9 @@ namespace :migrate do
 				dprint pf['runs']
 				dprint pf['name']
 
-				IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
+				inning = Inning.find pf['inning_id']
+				mtp = MatchTypePlayer.find pf['match_type_player_id']
+				IndividualScore.register inning, mtp, pf['runs'], pf['date_start']
 	dputs ' ' # debug
 			end
 		end

@@ -1,3 +1,29 @@
 // Place all the styles related to the IndividualScores controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+table.scores {
+//	.name		{text-align: left;}
+	tr:hover	{background-color: #EEE;}
+	a		{text-decoration: none;}
+
+	td, th {
+		text-align:left;
+		padding: 0 0.5em;
+		vertical-align: bottom;
+		border-right:1px solid #DDD;
+	}
+
+	caption {
+		margin-bottom: 1em;
+		text-align:left;
+
+		p		{margin: 0; font-size: 10px; line-height: 1.4em;}
+		p:first-child	{font-weight:bold;}
+	}
+
+	.scored		{color:#444;}
+	.unscored	{color:#DDD;}
+	.highest	{color:#000;background-color:#F0F0F0;}
+	.lowest		{color:#006E2E;background-color:#CDEB8B;}
+	.score		{text-align:right;}
+}

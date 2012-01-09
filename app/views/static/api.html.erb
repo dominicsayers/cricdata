@@ -7,13 +7,15 @@
 
 		<!-- Table of contents -->
 		<ol>
-
+			<li><a href="#player-careersummary">Player - career summary</a></li>
+			<li><a href="#playerlist-xfactor">Player list - X-factor</a></li>
+			<li><a href="#individualscore">Individual scores</a></li>
 		</ol>
 	</header>
 
 	<table>
 		<tbody>
-			<tr class="title">
+			<tr class="title" id="player-careersummary">
 				<td colspan="2"><h3>Player - career summary</h3></td>
 			</tr>
 
@@ -35,7 +37,7 @@
 				</td>
 			</tr>
 
-			<tr class="title">
+			<tr class="title" id="playerlist-xfactor">
 				<td colspan="2"><h3>Player list - X-factor</h3></td>
 			</tr>
 
@@ -67,6 +69,26 @@
 					<p>For ODI matches there is a qualification of 500 runs (at an average over 20) and 50 wickets.</p>
 					<p>For Twenty20 internationals there is a qualification of 150 runs (at an average over 10) and
 					15 wickets.</p>
+				</td>
+			</tr>
+
+			<tr class="title" id="individualscore">
+				<td colspan="2"><h3>Individual scores</h3></td>
+			</tr>
+
+			<tr>
+				<td>
+					<p><code><%= host %>/&lt;format&gt;/scores/individual<span class="optional">[.json]</span></code></p>
+					<p>Examples:</p>
+					<p><a href="<%= host %>/test/scores/individual"><code class="example"><%= host %>/test/scores/individual</code></a></p>
+					<p><a href="<%= host %>/odi/scores/individual"><code class="example"><%= host %>/odi/scores/individual</code></a></p>
+					<p><a href="<%= host %>/t20i/scores/individual"><code class="example"><%= host %>/t20i/scores/individual</code></a></p>
+				</td>
+				<td>
+					<p><code>format</code> is one of <code class="example">test</code>, <code class="example">odi</code> or <code class="example">t20i</code> </p>
+					<p>This will show the list of individual scores that have been achieved in the chosen match type.</p>
+					<p>The history of highest scores that have been achieved over the history of the game are shown</p>
+					<p>The history of Lowest Unscored Score is also shown.</p>
 				</td>
 			</tr>
 		</tbody>

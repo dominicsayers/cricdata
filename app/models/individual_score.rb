@@ -17,59 +17,65 @@ class IndividualScore
   index([ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ], unique: true)
 
   # Relationships
-  belongs_to :match_type_player
+  belongs_to :player
   belongs_to :inning
+
+  # Scopes
+  default_scope asc(:type_number).desc(:runs)
 
   # Helpers
   # Register an individual score
-  def self::register type_number, runs, date_start, name
+  def self::register inning, match_type_player, runs, date_start
 $\ = ' ' # debug
 
-    in_sc_max  = self.where(type_number:type_number).asc(:runs).last
+    type_number = match_type_player.type_number
+    score_max   = self.where(type_number:type_number).asc(:runs).last
 
-    if in_sc_max.blank?
+    if score_max.blank?
       # Seed the collection
-      in_sc_max                           = self.find_or_create_by type_number:type_number, runs:0
-      in_sc_max.unscored                  = true
-      in_sc_max.current_lowest_unscored   = true
-      in_sc_max.has_been_lowest_unscored  = true
-      in_sc_max.save
+      score_max                           = self.find_or_create_by type_number:type_number, runs:0
+      score_max.unscored                  = true
+      score_max.current_lowest_unscored   = true
+      score_max.has_been_lowest_unscored  = true
+      score_max.save
     end
 
-    max_runs    = in_sc_max.runs
+    max_runs    = score_max.runs
 dprint max_runs, :cyan # debug
 
     if runs > max_runs
       # Fill in any gaps
       while runs > max_runs
         max_runs += 1
-        in_sc = self.find_or_create_by type_number:type_number, runs:max_runs
+        score = self.find_or_create_by type_number:type_number, runs:max_runs
 
-        if in_sc.unscored.blank?
-          in_sc.unscored                    = true
-          in_sc.save
+        if score.unscored.blank?
+          score.unscored                    = true
+          score.save
         end
   dprint max_runs, :pink # debug
       end
 
-      in_sc.has_been_highest_score = true
-      in_sc.save
+      score.has_been_highest_score = true
+      score.save
     end
 dputs ' ' # debug
 
-    in_sc           = self.find_or_create_by type_number:type_number, runs:runs
-    in_sc.unscored  = false # that's a given
+    score           = self.find_or_create_by type_number:type_number, runs:runs
+    score.unscored  = false # that's a given
 
-    # Is this an earlier performance?
-    if in_sc.date_start.blank? or date_start < in_sc.date_start
-      in_sc.date_start  = date_start
-      in_sc.name        = name
+    # Is this an earlier (or the first) performance?
+    if score.date_start.blank? or date_start < score.date_start
+      score.inning      = inning
+      score.player      = match_type_player.player
+      score.name        = match_type_player.name
+      score.date_start  = date_start
     end
 
     # Is this the current lowest unscored score?
-    if in_sc.current_lowest_unscored == true
-      in_sc.current_lowest_unscored = false
-      in_sc.save
+    if score.current_lowest_unscored == true
+      score.current_lowest_unscored = false
+      score.save
 
       # Now look for the next lowest
       lu = self.where(type_number:type_number, unscored:true).asc(:runs).first
@@ -89,7 +95,7 @@ dp lu # debug
     end
 
     # Save it
-    in_sc.save
-dp in_sc # debug
+    score.save
+dp score # debug
   end
 end
