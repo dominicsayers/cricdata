@@ -29,7 +29,10 @@
     <% else %>
 	<td class="score <%= td_class %>"><%= link_to score.runs, individual_path(@rubric[:match_type_name], score.runs), :class => td_class %></td>
 	<td class="<%= td_class %>"><%= score.date_start %></td>
-	<td class="<%= td_class %>"><%= link_to score.name, score.player %></td>
+	<td class="<%= td_class %>">
+	  <% # link_to score.name, score.player %>
+	  <a href="<%= '/players/' + score.player_id %>"><%= score.name %></a>
+	</td>
     <% end %>
 	<td class="<%= td_class %>"><%=raw score.has_been_lowest_unscored ? '&#10003;' : '' %></td>
 	<td class="<%= td_class %>"><%=raw score.has_been_highest_score ? '&#10003;' : '' %></td>
