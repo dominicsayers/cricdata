@@ -13,7 +13,10 @@
   <% @performances.each do |pf| %>
   <tr>
 	<td><%= pf.date_start %></td>
-	<td><%= link_to pf.name, pf.match_type_player.player %></td>
+	<td>
+		<% # link_to pf.name, pf.match_type_player.player %>
+		<a href="<%= '/players/' + pf.player_id %>"><%= pf.name %></a>
+	</td>
   </tr>
   <% end %>
 </table>
