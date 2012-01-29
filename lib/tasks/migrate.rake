@@ -8,6 +8,40 @@ include Fetch
 include Mongo
 
 namespace :migrate do
+	namespace :v3 do
+		desc "This task is run to upgrade the schema from v3 to v4"
+		task :performances => :environment do
+			$\ = ' '
+
+			old_match_ref = 0
+
+#			Performance.where(:player_id.exists => false).each do |pf|
+			Performance.all.each do |pf|
+				# Update performance player
+				dprint pf.runs
+				dprint pf.name
+				dprint pf.match_type_player_id
+				player = pf.match_type_player.player
+				dprint player_id, :white
+#				pf.player = player
+
+				# Batting performance? Update latest individual score
+				unless pf.runs.blank?
+					score = IndividualScore.find(match_type:pf.match_type, runs:pf.runs)
+
+			    # Is this a later (or the last) performance of this score?
+					if score.latest_date.blank? or pf.date_start > score.latest_date
+						dprint pf.date_start, :cyan
+#						score.latest_name  = pf.name
+#						score.latest_date  = pf.date_start
+					end
+				end
+
+				puts ''
+			end
+		end
+	end
+
 	namespace :v2 do
 		desc "This task is run to upgrade the schema from v2 to v3"
 		task :fix_performances => :environment do

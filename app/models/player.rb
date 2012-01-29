@@ -19,6 +19,7 @@ class Player
 
   # Relationships
   has_many :match_type_players
+  has_many :performances
 
   # Helpers
 end

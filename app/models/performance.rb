@@ -54,6 +54,7 @@ class Performance
   # Relationships
   belongs_to :match_type_player
   belongs_to :inning
+  belongs_to :player
 
   # Helpers
 end

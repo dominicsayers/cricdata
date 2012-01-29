@@ -6,6 +6,8 @@ class IndividualScore
   field :runs,                      :type => Integer
   field :date_start,                :type => Date
   field :name,                      :type => String
+  field :latest_date,               :type => Date
+  field :latest_name,               :type => String
   field :unscored,                  :type => Boolean
   field :current_lowest_unscored,   :type => Boolean
   field :has_been_lowest_unscored,  :type => Boolean
@@ -70,6 +72,12 @@ dputs ' ' # debug
       score.player      = match_type_player.player
       score.name        = match_type_player.name
       score.date_start  = date_start
+    end
+
+    # Is this a later (or the last) performance?
+    if score.latest_date.blank? or date_start > score.latest_date
+      score.latest_name  = match_type_player.name
+      score.latest_date  = date_start
     end
 
     # Is this the current lowest unscored score?
