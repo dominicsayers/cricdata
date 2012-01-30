@@ -16,24 +16,29 @@ namespace :migrate do
 			old_match_ref = 0
 
 #			Performance.where(:player_id.exists => false).each do |pf|
-			Performance.all.each do |pf|
+			Performance.where(:runs.exists => true).each do |pf|
 				# Update performance player
-				dprint pf.runs
+				dprint pf.inning_id
 				dprint pf.name
 				dprint pf.match_type_player_id
 				player = pf.match_type_player.player
-				dprint player_id, :white
-#				pf.player = player
+				dprint player.slug, :white
+				pf.player = player
+				pf.save
 
 				# Batting performance? Update latest individual score
 				unless pf.runs.blank?
-					score = IndividualScore.find(match_type:pf.match_type, runs:pf.runs)
+					dprint pf.runs
+					score = IndividualScore.where(type_number:pf.type_number, runs:pf.runs).first
 
 			    # Is this a later (or the last) performance of this score?
 					if score.latest_date.blank? or pf.date_start > score.latest_date
 						dprint pf.date_start, :cyan
-#						score.latest_name  = pf.name
-#						score.latest_date  = pf.date_start
+						score.latest_name  = pf.name
+						score.latest_date  = pf.date_start
+						score.save
+					else
+						dprint pf.date_start, :green
 					end
 				end
 
