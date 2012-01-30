@@ -10,32 +10,38 @@
 
   <tr>
     <th class="score">Score</th>
-    <th>First scored</th>
-    <th>By</th>
     <th>Lowest</th>
     <th>Highest</th>
+    <th>Frequency</th>
+    <th>Not outs</th>
+    <th>First scored</th>
+    <th>By</th>
+    <th>Last scored</th>
+    <th>By</th>
   </tr>
 
   <%
   @individual_scores.each do |score|
-	td_class = score.unscored ? 'unscored' : 'scored'
-	td_class += ' lowest'	if score.has_been_lowest_unscored
-	td_class += ' highest'	if score.has_been_highest_score
+    td_class = score.unscored ? 'unscored' : 'scored'
+    td_class += ' lowest'	if score.has_been_lowest_unscored
+    td_class += ' highest'	if score.has_been_highest_score
+    td_class += ' unscored'	if score.unscored
   %>
-  <tr>
+  <tr class="<%= td_class %>">
     <% if score.unscored %>
 	<td class="score <%= td_class %>"><%= score.runs %></td>
-	<td class="<%= td_class %>" colspan="2">Never been scored</td>
+	<td class="<%= td_class %>" colspan="8">Current lowest unscored score</td>
     <% else %>
 	<td class="score <%= td_class %>"><%= link_to score.runs, individual_path(@rubric[:match_type_name], score.runs), :class => td_class %></td>
-	<td class="<%= td_class %>"><%= score.date_start %></td>
-	<td class="<%= td_class %>">
-	  <% # link_to score.name, score.player %>
-	  <a href="<%= '/players/' + score.player_id %>"><%= score.name %></a>
-	</td>
-    <% end %>
 	<td class="<%= td_class %>"><%=raw score.has_been_lowest_unscored ? '&#10003;' : '' %></td>
 	<td class="<%= td_class %>"><%=raw score.has_been_highest_score ? '&#10003;' : '' %></td>
+	<td class="<%= td_class %>"><%= score.frequency %></td>
+	<td class="<%= td_class %>"><%= score.notouts %></td>
+	<td class="<%= td_class %>"><%= score.date_start %></td>
+	<td class="<%= td_class %>"><a href="<%= '/players/' + score.player_id %>"><%= score.name %></a></td>
+	<td class="<%= td_class %>"><%= score.latest_date %></td>
+	<td class="<%= td_class %>"><a href="<%= '/players/' + (score.latest_player_id.blank? ? '' : score.latest_player_id) %>"><%= score.latest_name %></a></td>
+    <% end %>
   </tr>
   <% end %>
 </table>

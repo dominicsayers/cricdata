@@ -8,10 +8,13 @@ class IndividualScore
   field :name,                      :type => String
   field :latest_date,               :type => Date
   field :latest_name,               :type => String
+  field :latest_player_id,          :type => String
   field :unscored,                  :type => Boolean
   field :current_lowest_unscored,   :type => Boolean
   field :has_been_lowest_unscored,  :type => Boolean
   field :has_been_highest_score,    :type => Boolean
+  field :frequency,                 :type => Integer
+  field :notouts,                   :type => Integer
 
   key :type_number, :runs
 
@@ -27,7 +30,7 @@ class IndividualScore
 
   # Helpers
   # Register an individual score
-  def self::register inning, match_type_player, runs, date_start
+  def self::register inning, match_type_player, runs, date_start, notout
 $\ = ' ' # debug
 
     type_number = match_type_player.type_number
@@ -66,6 +69,10 @@ dputs ' ' # debug
     score           = self.find_or_create_by type_number:type_number, runs:runs
     score.unscored  = false # that's a given
 
+    # Update counts
+    score.frequency = score.frequency.blank? ? 1 : score.frequency + 1
+    score.notouts   = (score.notouts.blank? ? 1 : score.notouts + 1) if notout
+
     # Is this an earlier (or the first) performance?
     if score.date_start.blank? or date_start < score.date_start
       score.inning      = inning
@@ -76,8 +83,9 @@ dputs ' ' # debug
 
     # Is this a later (or the last) performance?
     if score.latest_date.blank? or date_start > score.latest_date
-      score.latest_name  = match_type_player.name
-      score.latest_date  = date_start
+      score.latest_name       = match_type_player.name
+      score.latest_date       = date_start
+      score.latest_player_id  = match_type_player._id
     end
 
     # Is this the current lowest unscored score?

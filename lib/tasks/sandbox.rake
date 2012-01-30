@@ -8,6 +8,26 @@ include Fetch
 include Mongo
 
 namespace :sandbox do
+	task :initials => :environment do
+		$\ = ' '
+
+		Player.where(:name.exists => true).each do |player|
+			initials = player.slug.split('-').first
+			forename = player.fullname.split(' ').first.downcase
+
+			if initials != forename
+				l = initials.length
+				if l > 4
+					dprint player.slug
+					dprint player.name
+					dprint initials, :white
+					dprint forename, :cyan
+					dputs l, :red
+				end
+			end
+		end
+	end
+
 	task :scores => :environment do
 		$\ = ' '
 

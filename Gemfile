@@ -16,7 +16,6 @@ end
 # Needed only for non-Windows environments
 platform :ruby do
   gem 'execjs'
-#  gem 'therubyracer'
 end
 
 # JavasScript libs
@@ -26,4 +25,10 @@ gem 'modernizr-rails'
 group :test do
   # Pretty printed test output
   gem 'turn', :require => false
+end
+
+group :development, :test do
+  platform :ruby do
+    gem 'therubyracer' # Not needed for Heroku or Windows
+  end
 end

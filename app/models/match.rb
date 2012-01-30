@@ -237,7 +237,7 @@ dp p, :white
           performance.save
 dp performance
 
-          IndividualScore.register inning, mtp, performance.runs, @match.date_start
+          IndividualScore.register inning, mtp, performance.runs, @match.date_start, performance.notout
         end
 
         inning.save

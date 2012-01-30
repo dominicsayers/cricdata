@@ -45,6 +45,44 @@ namespace :migrate do
 				puts ''
 			end
 		end
+
+		task :frequencies => :environment do
+			$\ = ' '
+
+			# Zero the frequency counters
+			IndividualScore.all.each do |score|
+				dprint score._id
+				score.frequency = 0
+				score.notouts = 0
+				score.save
+			end
+
+			Performance.where(:runs.exists => true).each do |pf|
+				# Update performance player
+				dprint pf.inning_id
+				dprint pf.name
+
+				# Batting performance? Update latest individual score
+				unless pf.runs.blank?
+					dprint pf.runs
+					score = IndividualScore.where(type_number:pf.type_number, runs:pf.runs).first
+
+					if score.latest_date == pf.date_start and score.latest_name == pf.name
+						score.latest_player_id = pf.player_id
+						dprint score.latest_player_id, :green
+					end
+
+			    # Update counts
+					score.frequency = score.frequency.blank? ? 1 : score.frequency + 1
+					score.notouts		= (score.notouts.blank? ? 1 : score.notouts + 1) if pf.notout
+					dprint score.frequency, :white
+					dprint score.notouts, :cyan
+					score.save
+				end
+
+				puts ''
+			end
+		end
 	end
 
 	namespace :v2 do

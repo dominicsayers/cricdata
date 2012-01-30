@@ -21,6 +21,9 @@ table.scores {
 		p:first-child	{font-weight:bold;}
 	}
 
+	tr.unscored:not(.lowest)
+			{display:none;}
+
 	.scored		{color:#444;}
 	.unscored	{color:#DDD;}
 	.highest	{color:#000;background-color:#F0F0F0;}
