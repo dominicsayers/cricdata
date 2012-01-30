@@ -16,7 +16,7 @@ end
 # Needed only for non-Windows environments
 platform :ruby do
   gem 'execjs'
-  gem 'therubyracer'
+#  gem 'therubyracer'
 end
 
 # JavasScript libs
