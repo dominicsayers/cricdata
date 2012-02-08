@@ -38,7 +38,7 @@
 	<td class="<%= td_class %>"><%= score.frequency %></td>
 	<td class="<%= td_class %>"><%= score.notouts %></td>
 	<td class="<%= td_class %>"><%= score.date_start %></td>
-	<td class="<%= td_class %>"><a href="<%= '/players/' + score.player_id %>"><%= score.name %></a></td>
+	<td class="<%= td_class %>"><a href="<%= '/players/' + (score.player_id.blank? ? '' : score.player_id) %>"><%= score.name %></a></td>
 	<td class="<%= td_class %>"><%= score.latest_date %></td>
 	<td class="<%= td_class %>"><a href="<%= '/players/' + (score.latest_player_id.blank? ? '' : score.latest_player_id) %>"><%= score.latest_name %></a></td>
     <% end %>

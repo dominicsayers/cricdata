@@ -63,6 +63,73 @@ class MatchTypePlayer
 
   # Helpers
   #----------------------------------------------------------------------------
+  # Get player data (including fielding performances)
+  def get_player_data
+    # Get fielding data
+    url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [self.player_ref, self.type_number]
+    doc = get_data url
+
+    return doc
+  end
+
+  # Update names
+  def update_names doc=nil
+    if self.name.blank?
+      doc = self.get_player_data if doc.blank?
+      self.name  = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
+      self.save
+    end
+
+    if self.fullname.blank?
+      doc = self.get_player_data if doc.blank?
+      scripts = doc.xpath('//script')
+
+      scripts.each do |script|
+        /var omniPageName.+:(.+)";/i.match(script.content[0..100])
+
+        unless $1.nil?
+          self.fullname  = $1
+          self.save
+          break
+        end
+      end
+    end
+
+    player_ref = self.player_ref
+
+    # Update Player document
+    # Scorecard name (master document)
+    slug    = self.name.parameterize
+    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+    player.master_ref = player_ref
+    player.name       = self.name
+    player.fullname   = self.fullname
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, self._id
+dp player, :pink # debug
+    player.save
+
+    self.player = player
+    self.save
+
+    # Full name
+    slug    = self.fullname.parameterize
+    player  = Player.find_or_create_by slug:slug
+    player.add_to_set :player_refs, player_ref
+    player.add_to_set :match_type_player_ids, self._id
+    player.save
+
+    # Name parts
+    nameparts = self.fullname.split(' ')
+
+    nameparts.each do |subslug|
+      slug    = subslug.parameterize
+      player  = Player.find_or_create_by slug:slug
+      player.add_to_set :player_refs, player_ref
+      player.save
+    end
+  end
+
   # Get history of fielding performances
   def self::get_fielding_statistics mtp
     match_type_player_id  = mtp._id
@@ -72,26 +139,11 @@ $\ = ' ' # debug
 dputs player_ref, :cyan # debug
 
     # Get fielding data
-    url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, mtp.type_number]
-    doc = get_data url
+    doc = mtp.get_player_data
 
     # If player's basic details are incomplete then we can take
     # this opportunity to update them
-    mtp.name  = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip if mtp.name.nil?
-
-    if mtp.fullname.nil?
-      scripts = doc.xpath('//script')
-
-      scripts.each do |script|
-        /var omniPageName.+:(.+)";/i.match(script.content[0..100])
-
-        unless $1.nil?
-          mtp.fullname  = $1
-          mtp.save
-          break
-        end
-      end
-    end
+    mtp.update_names doc
 
     # Process fielding data
     nodeset = doc.xpath('//tr[@class="data1"]')
@@ -212,49 +264,14 @@ dputs mtp.xfactor.nil? ? "X" : mtp.xfactor, :white # debug
   end
 
   #----------------------------------------------------------------------------
-  # Update Player document from name(s)
-  def self::update_name mtp
-    player_ref = mtp.player_ref
-    
-    # Update Player document
-    # Scorecard name (master document)
-    slug    = mtp.name.parameterize
-    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
-    player.master_ref = player_ref
-    player.name       = mtp.name
-    player.fullname   = mtp.fullname
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, mtp._id
-dp player, :pink # debug
-    player.save
-
-    mtp.player = player
-    mtp.save
-
-    # Full name
-    slug    = mtp.fullname.parameterize
-    player  = Player.find_or_create_by slug:slug
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, mtp._id
-    player.save
-
-    # Name parts
-    nameparts = mtp.fullname.split(' ')
-
-    nameparts.each do |subslug|
-      slug    = subslug.parameterize
-      player  = Player.find_or_create_by slug:slug
-      player.add_to_set :player_refs, player_ref
-      player.save
-    end
-  end
-
-  #----------------------------------------------------------------------------
   # Update cumulative statistics from performance data
   def self::update_statistics mtp, do_fielding=true
     # Get fielding statistics
-    self::get_fielding_statistics mtp if do_fielding
-    self::update_name mtp
+    if do_fielding
+      self::get_fielding_statistics mtp
+    else
+      mtp.update_names
+    end
 
     # Process performance data
     match_type_player_id     = mtp._id

@@ -202,7 +202,7 @@ dputs ground_name, :white # debug
 
       # Batting
       stats[inning_number][:batting].each do |p|
-dp p, :white
+dp p, :white # debug
         if p[:ref] == 0
           # Record innings analysis
           if p[:name].downcase == 'extras'
@@ -211,11 +211,15 @@ dp p, :white
           else
             inning.summary         = p[:howout]
           end
+        elsif p[:howout].downcase.in?(['absent hurt', 'absent ill'])
+          # Not a performance so don't record anything
+dputs p[:howout], :blue # debug
         else
           # Make sure player exists
           mtp        = MatchTypePlayer.find_or_create_by type_number: type_number, player_ref: p[:ref]
           mtp.name   = p[:name]
           mtp.dirty  = true
+          mtp.update_names
           mtp.save
 
           performance = inning.performances.find_or_create_by match_type_player_id: mtp._id
@@ -228,14 +232,14 @@ dp p, :white
           performance.sixes         = p[:'6s']
           performance.strikerate    = p[:SR]
           performance.howout        = p[:howout]
-          performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
+          performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt'])
 
           performance.type_number   = type_number
           performance.date_start    = @match.date_start
           performance.name          = p[:name]
 
           performance.save
-dp performance
+dp performance # debug
 
           IndividualScore.register inning, mtp, performance.runs, @match.date_start, performance.notout
         end
@@ -261,6 +265,7 @@ dp p, :white
         mtp        = MatchTypePlayer.find_or_create_by type_number: type_number, player_ref: p[:ref]
         mtp.name   = p[:name]
         mtp.dirty  = true
+        mtp.update_names
         mtp.save
 
         performance = inning.performances.find_or_create_by match_type_player_id: mtp._id

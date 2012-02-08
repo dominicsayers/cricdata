@@ -46,7 +46,7 @@ $\ = ' ' # debug
     end
 
     max_runs    = score_max.runs
-dprint max_runs, :cyan # debug
+#dprint max_runs, :cyan # debug
 
     if runs > max_runs
       # Fill in any gaps
@@ -58,7 +58,7 @@ dprint max_runs, :cyan # debug
           score.unscored                    = true
           score.save
         end
-  dprint max_runs, :pink # debug
+dprint max_runs, :pink # debug
       end
 
       score.has_been_highest_score = true
@@ -81,11 +81,13 @@ dputs ' ' # debug
       score.date_start  = date_start
     end
 
+dp match_type_player, :pink # debug
+
     # Is this a later (or the last) performance?
     if score.latest_date.blank? or date_start > score.latest_date
       score.latest_name       = match_type_player.name
       score.latest_date       = date_start
-      score.latest_player_id  = match_type_player._id
+      score.latest_player_id  = match_type_player.player._id
     end
 
     # Is this the current lowest unscored score?
