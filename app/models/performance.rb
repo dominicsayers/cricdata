@@ -37,6 +37,7 @@ class Performance
   field :type_number,     :type => Integer
   field :date_start,      :type => Date
   field :name,            :type => String
+  field :for_team,        :type => String
 
   # Indexes
   index([ [:inning_id, Mongo::ASCENDING], [:match_type_player_id, Mongo::ASCENDING] ], unique: true)

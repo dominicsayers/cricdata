@@ -46,7 +46,8 @@ $\ = ' ' # debug
     end
 
     max_runs    = score_max.runs
-#dprint max_runs, :cyan # debug
+#-dprint runs, :cyan # debug
+#-dprint max_runs, :cyan # debug
 
     if runs > max_runs
       # Fill in any gaps

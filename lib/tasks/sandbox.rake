@@ -8,6 +8,61 @@ include Fetch
 include Mongo
 
 namespace :sandbox do
+	task :fixup_performances => :environment do
+		$\ = ' '
+    
+    Performance.where(:type_number.exists => false).each do |pf|
+			dprint pf.match_type_player_id
+			dprint pf.inning_id
+
+      mtp = MatchTypePlayer.find pf.match_type_player_id
+			dprint mtp.fullname
+      
+      match_id = pf.inning_id.split('-').first()
+      match = Match.find match_id
+      dprint match_id
+      dprint match.date_start
+ 
+      type_number = pf.match_type_player_id.split('-').first()
+      dprint type_number
+      
+      pf.name         = mtp.fullname
+      pf.date_start   = match.date_start
+      pf.type_number  = type_number
+      pf.save
+dputs ' ' # debug
+		end
+	end
+
+	task :list_performances_by_country => :environment do
+		$\ = ' '
+
+		# Using mongo gem directly because of the size of the result set
+		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
+			hostname	= 'burdett.moo.li'
+			db_name		= 'cricdata'
+		else
+			hostname	= 'localhost'
+			db_name		= 'cricdata_development'
+		end
+
+		db 			= Connection.new(hostname).db db_name
+		pfs			= db.collection('performances')
+dputs db.connection.host
+dputs db_name
+
+#		pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
+		pfs.find().each do |pf|
+			dprint pf['type_number']
+			dprint pf['inning_id']
+			dprint pf['name']
+
+      inning = Inning.find pf['inning_id']
+      
+dputs ' ' # debug
+		end
+	end
+
 	task :initials => :environment do
 		$\ = ' '
 

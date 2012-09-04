@@ -7,6 +7,8 @@ class Match
   field :serial,      :type => Integer
   field :date_start,  :type => Date
   field :date_end,    :type => Date
+  field :home_team,   :type => String
+  field :away_team,   :type => String
 
   key :match_ref
   index :match_ref, unique: true
@@ -29,9 +31,11 @@ class Match
 
     match_ref = @match.match_ref
     recent_match = @match.date_end.blank? ? true : @match.date_end > 1.week.ago.to_date
+dputs "Parsing match #{match_ref}" # debug
 
     # Get match data
     raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
+#-dp raw_match, :cyan # debug
 
     if recent_match or raw_match.zhtml.blank?
       url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
@@ -43,14 +47,16 @@ class Match
 
     # Parse dates
     title = doc.xpath("//title").first.children.first.content
-    /.+?,\s(\w{3})\s([0-9]{1,2})(?:,\s([0-9]+))*(?:\s*(?:-)*\s*(\w{3})*\s*([0-9]{1,2}),\s([0-9]+))*/i.match(title)
+    /(?:.*?: )*(.*) v (.*) at .*,\s(\w{3})\s([0-9]{1,2})(?:,\s([0-9]+))*(?:\s*(?:-)*\s*(\w{3})*\s*([0-9]{1,2}),\s([0-9]+))*/i.match(title)
 
-    m1 = $1
-    d1 = $2
-    y1 = $3
-    m2 = $4
-    d2 = $5
-    y2 = $6
+    match_teams = [$1, $2]
+dputs match_teams # debug
+    m1 = $3
+    d1 = $4
+    y1 = $5
+    m2 = $6
+    d2 = $7
+    y2 = $8
 
     y1 = y2 if y1.blank?
     m2 = m1 if m2.blank?
@@ -60,6 +66,8 @@ class Match
     m1n = Date::ABBR_MONTHNAMES.index(m1)
     m2n = Date::ABBR_MONTHNAMES.index(m2)
 
+    @match.home_team   = match_teams[0]
+    @match.away_team   = match_teams[1]
     @match.date_start  = Date.new(y1.to_i, m1n, d1.to_i)
     @match.date_end    = Date.new(y2.to_i, m2n, d2.to_i)
 
@@ -106,6 +114,7 @@ dputs ground_name, :white # debug
     inning_number   = 1
     borb            = :batting
     stats_template  = {}
+    innings_teams   = {}
 
     inning_nodeset.each do |inning_node|
       inning_header_nodeset = inning_node.xpath('td/b')
@@ -127,10 +136,35 @@ dputs ground_name, :white # debug
         inning_number += 1
         borb = :batting
       else
+        # Which team is batting?
+#-dp inning_node, :white # debug
+        inning_description_nodeset = inning_node.xpath("td[@colspan='2']")
+#-dp inning_description_nodeset, :cyan # debug
+#-dputs inning_description_nodeset.children.empty? ? "Empty" : "Not empty" # debug
+
+        unless inning_description_nodeset.children.empty?
+          inning_description = inning_description_nodeset.children.first.content
+#-dputs inning_description, :pink # debug
+          /(.*?)(?: 1st| 2nd)* Innings/i.match(inning_description)
+          batting_team = $1
+#-dputs batting_team # debug
+#-dp innings_teams, :pink # debug
+
+          # Which team is bowling?
+          i = match_teams.index batting_team
+          
+          unless i.nil?
+            innings_teams[inning_number] = {} unless innings_teams.has_key? inning_number
+            innings_teams[inning_number][:batting] = i
+            innings_teams[inning_number][:bowling] = 1 - i
+          end
+        end
+        
         borb = :bowling
       end
     end
-#-dp stats_template, :cyan
+#-dp stats_template, :cyan # debug
+#-dp innings_teams, :cyan # debug
 
     # Innings
     inning_nodeset  = doc.xpath("//tr[@class='inningsRow']/td")
@@ -141,10 +175,15 @@ dputs ground_name, :white # debug
     stats_counter   = 0
 
     inning_nodeset.each do |inning_node|
+       # If it isn't headed XXX [nth] Innings then ignore it
+      next unless innings_teams.has_key? inning_number
+
       classattr   = inning_node.attributes['class']
       classname   = classattr.nil? ? '' : classattr.value
       firstchild  = inning_node.children.first
       text        = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
+#-dputs classname, :cyan # debug
+#-dputs text, :cyan # debug
 
       stats[inning_number] = {:batting => [], :bowling => []} unless stats.has_key? inning_number
 
@@ -191,6 +230,7 @@ dputs ground_name, :white # debug
     end
 
     stats[inning_number][borb] << pf unless pf == {} # save current performance hash
+#-dp stats, :pink # debug
 
     # Now we have the stats gathered into a hash, we can parse out the
     # players' performmances
@@ -199,7 +239,7 @@ dputs ground_name, :white # debug
 
       inning      = @match.innings.find_or_create_by inning_number: inning_number
       type_number = @match.match_type.type_number
-
+      
       # Batting
       stats[inning_number][:batting].each do |p|
 dp p, :white # debug
@@ -211,7 +251,7 @@ dp p, :white # debug
           else
             inning.summary         = p[:howout]
           end
-        elsif p[:howout].downcase.in?(['absent hurt', 'absent ill'])
+        elsif p[:howout].downcase.in?(['absent hurt', 'absent ill', 'absent'])
           # Not a performance so don't record anything
 dputs p[:howout], :blue # debug
         else
@@ -243,9 +283,12 @@ dp performance # debug
 
           IndividualScore.register inning, mtp, performance.runs, @match.date_start, performance.notout
         end
-
-        inning.save
       end
+
+      inning.batting_team = match_teams[innings_teams[inning_number][:batting]]
+      inning.bowling_team = match_teams[innings_teams[inning_number][:bowling]]
+      inning.save
+dp inning, :cyan # debug
 
       stats[inning_number][:bowling].each do |p|
 dp p, :white
@@ -277,6 +320,10 @@ dp p, :white
         performance.wickets       = p[:W]
         performance.economy       = p[:Econ]
         performance.extras        = p[:Extras]
+
+        performance.type_number   = type_number
+        performance.date_start    = @match.date_start
+        performance.name          = p[:name]
 
         performance.save
 dp performance

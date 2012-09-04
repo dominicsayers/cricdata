@@ -97,7 +97,7 @@ namespace :admin do
 
   task :parse_match, [:match_ref] => [:environment] do |t, args|
       match_ref = (args.match_ref || "0")
-      dputs "Parsing #{match_ref}..."
+      dputs "Trying to parse match #{match_ref}..."
       Match.parse match_ref
       dputs 'done.'
   end
