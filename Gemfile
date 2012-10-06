@@ -27,8 +27,8 @@ group :test do
   gem 'turn', :require => false
 end
 
-group :development, :test do
-  platform :ruby do
-    gem 'therubyracer' # Not needed for Heroku or Windows
-  end
-end
+#group :development, :test do
+#  platform :ruby do
+#    gem 'therubyracer' # Not needed for Heroku or Windows
+#  end
+#end
