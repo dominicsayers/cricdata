@@ -1,0 +1,21 @@
+development:
+  host: localhost
+  database: cricdata_development
+
+test:
+  host: 21w.moo.li
+  database: cricdata
+
+# set these environment variables on your prod server
+production:
+#  uri: <%= ENV['MONGOHQ_URL'] %>
+  host: <%= ENV['MONGOID_HOST'] %>
+  port: <%= ENV['MONGOID_PORT'] %>
+  database: <%= ENV['MONGOID_DATABASE'] %>
+#  username: <%= ENV['MONGOID_USERNAME'] %>
+#  password: <%= ENV['MONGOID_PASSWORD'] %>
+  # slaves:
+  #   - host: slave1.local
+  #     port: 27018
+  #   - host: slave2.local
+  #     port: 27019
