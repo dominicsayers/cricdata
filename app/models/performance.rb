@@ -40,10 +40,10 @@ class Performance
   field :for_team,        :type => String
 
   # Indexes
-  index([ [:inning_id, Mongo::ASCENDING], [:match_type_player_id, Mongo::ASCENDING] ], unique: true)
-  index([ [:match_type_player_id, Mongo::ASCENDING], [:inning_id, Mongo::ASCENDING] ], unique: true)
-  index([ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ], unique: false)
-  index :runs
+  index({ inning_id:1, match_type_player_id:1 }, { unique:true })
+  index({ match_type_player_id:1, inning_id:1 }, { unique:true })
+  index({ type_number:1, date_start:1, runs:1 }, { unique:false })
+  index({ runs:1 })
 
   # Validations
 

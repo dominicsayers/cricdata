@@ -10,7 +10,7 @@ class MatchType
   field :type_number, :type => Integer
   field :name,        :type => String
 
-  key :type_number
+#  key :type_number
 
   # Validations
 

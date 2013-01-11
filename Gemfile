@@ -1,6 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rails'
+gem 'thin'
 gem 'mongoid'
 gem 'bson_ext'
 gem 'nokogiri'

@@ -7,5 +7,5 @@ class RawMatch
   field :html,      :type => String
   field :zhtml,     :type => BSON::Binary
 
-  key :match_ref
+#  key :match_ref
 end

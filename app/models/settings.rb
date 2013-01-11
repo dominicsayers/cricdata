@@ -4,7 +4,7 @@ class Settings
   # Fields
   field :name, :type => String
   field :value, :type => String
-  key :name
+#  key :name
 
   # Validations
 

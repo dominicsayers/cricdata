@@ -10,8 +10,8 @@ class Match
   field :home_team,   :type => String
   field :away_team,   :type => String
 
-  key :match_ref
-  index :match_ref, unique: true
+#  key :match_ref
+  index({ match_ref:1 }, { unique:true })
 
   # Validations
 

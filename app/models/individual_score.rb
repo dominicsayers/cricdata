@@ -16,10 +16,10 @@ class IndividualScore
   field :frequency,                 :type => Integer
   field :notouts,                   :type => Integer
 
-  key :type_number, :runs
+#  key :type_number, :runs
 
   # Indexes
-  index([ [:type_number, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ], unique: true)
+  index({ type_number:1, runs:1 }, { unique:true })
 
   # Relationships
   belongs_to :player

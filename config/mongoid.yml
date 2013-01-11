@@ -69,9 +69,9 @@ test:
 production:
   sessions:
     default:
-      database: <%= ENV['MONGOID_DATABASE'] %>
+      database: "<%= ENV['MONGOID_DATABASE'] %>"
       hosts:
-        - <%= ENV['MONGOID_HOST'] %>:<%= ENV['MONGOID_PORT'] %>
+        - "<%= ENV['MONGOID_HOST'] %>:<%= ENV['MONGOID_PORT'] %>"
       options:
         consistency: :strong
 

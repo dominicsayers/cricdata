@@ -5,7 +5,7 @@ class Ground
   field :ground_ref, :type => Integer
   field :name, :type => String
 
-  key :ground_ref
+#  key :ground_ref
 
   # Validations
 

@@ -44,10 +44,10 @@ class MatchTypePlayer
   field :catches_wkt,     :type => Integer
   field :catches,         :type => Integer # Not as a wicketkeeper
 
-  key :type_number, :player_ref
-  index [ [:player_ref, Mongo::ASCENDING], [:type_number, Mongo::ASCENDING] ], unique: true
-  index [ [:type_number, Mongo::ASCENDING], [:player_ref, Mongo::ASCENDING] ], unique: true
-  index [ [:type_number, Mongo::ASCENDING], [:xfactor, Mongo::DESCENDING] ]
+#  key :type_number, :player_ref
+  index({ player_ref:1, type_number:1 }, { unique:true })
+  index({ type_number:1, player_ref:1 }, { unique:true })
+  index({ type_number:1, xfactor:-1 })
 
   # Validations
 
