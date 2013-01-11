@@ -11,6 +11,7 @@ class MatchType
   field :name,        :type => String
 
 #  key :type_number
+  index({ type_number:1 }, { unique:true })
 
   # Validations
 

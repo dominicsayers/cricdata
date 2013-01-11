@@ -39,7 +39,7 @@ dputs "Parsing match #{match_ref}" # debug
 
     if recent_match or raw_match.zhtml.blank?
       url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
-      raw_match.zhtml = BSON::Binary.new(Zlib::Deflate.deflate(get_response(url)))
+      raw_match.zhtml = Moped::BSON::Binary.new(:generic, Zlib::Deflate.deflate(get_response(url)))
       raw_match.save
     end
 

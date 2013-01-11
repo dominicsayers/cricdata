@@ -6,6 +6,7 @@ class Ground
   field :name, :type => String
 
 #  key :ground_ref
+  index({ ground_ref:1 }, { unique:true })
 
   # Validations
 

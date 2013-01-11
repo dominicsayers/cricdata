@@ -5,6 +5,7 @@ class Settings
   field :name, :type => String
   field :value, :type => String
 #  key :name
+  index({ name:1 }, { unique:true })
 
   # Validations
 

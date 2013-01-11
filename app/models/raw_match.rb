@@ -5,7 +5,8 @@ class RawMatch
   # Fields
   field :match_ref, :type => Integer
   field :html,      :type => String
-  field :zhtml,     :type => BSON::Binary
+  field :zhtml,     :type => Moped::BSON::Binary
 
 #  key :match_ref
+  index({ match_ref:1 }, { unique:true })
 end

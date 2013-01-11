@@ -10,6 +10,7 @@ class Player
 
 #  field :_id,         :type => String, default: ->{ slug }
 
+  index({ slug:1 }, { unique:true })
   index({ master_ref:1 })
   index({ player_refs:1 })
 

@@ -2,6 +2,7 @@ source 'http://rubygems.org'
 
 gem 'rails'
 gem 'thin'
+gem 'mongo'
 gem 'mongoid'
 gem 'bson_ext'
 gem 'nokogiri'
