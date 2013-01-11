@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rails'
-gem 'mongoid'
+gem 'mongoid', '< 3.0.0'
 gem 'bson_ext'
 gem 'nokogiri'
 
