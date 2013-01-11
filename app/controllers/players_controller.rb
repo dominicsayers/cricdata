@@ -9,7 +9,7 @@ dp params # debug
 
     begin
       # Look for player with this id
-      players       = [Player.find(@slug)]
+      players       = Player.where(slug:@slug)
     rescue
       # Couldn't find a matching player, so search by slug
       if /\d+/.match @slug
