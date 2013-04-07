@@ -18,21 +18,10 @@ group :assets do
 end
 
 # Needed only for non-Windows environments
-platform :ruby do
-  gem 'execjs'
-end
+#platform :ruby do
+#  gem 'execjs'
+#end
 
 # JavasScript libs
 gem 'jquery-rails'
 gem 'modernizr-rails'
-
-group :test do
-  # Pretty printed test output
-  gem 'turn', :require => false
-end
-
-#group :development, :test do
-#  platform :ruby do
-#    gem 'therubyracer' # Not needed for Heroku or Windows
-#  end
-#end
