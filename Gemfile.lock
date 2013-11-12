@@ -68,6 +68,7 @@ GEM
       tzinfo (~> 0.3.22)
     moped (1.4.5)
     multi_json (1.7.2)
+    newrelic_rpm (3.6.9.171)
     nokogiri (1.5.9)
     nokogiri (1.5.9-x86-mingw32)
     origin (1.0.11)
@@ -132,6 +133,7 @@ DEPENDENCIES
   modernizr-rails
   mongo
   mongoid
+  newrelic_rpm
   nokogiri
   rails
   sass-rails
