@@ -6,7 +6,7 @@ gem 'rails'
 gem 'thin'
 gem 'mongo'
 gem 'mongoid', github: 'mongoid/mongoid'
-gem 'bson_ext'
+gem 'moped'
 gem 'nokogiri'
 gem 'newrelic_rpm'
 
