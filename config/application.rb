@@ -3,7 +3,7 @@ require File.expand_path('../boot', __FILE__)
 #require 'rails/all'
 require "action_controller/railtie"
 require "action_mailer/railtie"
-require "active_resource/railtie"
+#require "active_resource/railtie"
 require "rails/test_unit/railtie"
 require "sprockets/railtie" # Uncomment this line for Rails 3.1+
 
@@ -17,7 +17,7 @@ end
 module Cricdata
   class Application < Rails::Application
     config.assets.initialize_on_precompile = false
-    
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.

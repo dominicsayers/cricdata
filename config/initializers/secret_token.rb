@@ -9,4 +9,4 @@
 
 # Make sure your secret_key_base is kept private
 # if you're sharing your code publicly.
-Cricdata::Application.config.secret_key_base = 'ba8715debf00547d3cded3a81a9d405853dfc9448e786d47680affd29dbf02dab6f0a0d888d74c7293a522300096629c1f6c6c62949a4e4788114e054682b732'
+Cricdata::Application.config.secret_token = 'ba8715debf00547d3cded3a81a9d405853dfc9448e786d47680affd29dbf02dab6f0a0d888d74c7293a522300096629c1f6c6c62949a4e4788114e054682b732'
