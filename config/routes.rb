@@ -14,5 +14,5 @@ Cricdata::Application.routes.draw do
     end
   end
 
-  match ':action' => 'static#:action'
+  get ':action' => 'static#:action'
 end
