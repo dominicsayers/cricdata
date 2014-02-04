@@ -15,7 +15,7 @@
 	<td><%= pf.date_start %></td>
 	<td>
 		<% # link_to pf.name, pf.match_type_player.player %>
-		<a href="<%= '/players/' + pf.match_type_player_id.split('-').last %>"><%= pf.name %></a>
+		<a href="/players/<%= pf.player_id %>"><%= pf.name %></a>
 	</td>
   </tr>
   <% end %>
