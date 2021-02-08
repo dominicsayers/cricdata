@@ -42,8 +42,8 @@ GEM
     coffee-script-source (1.6.2)
     daemons (1.1.9)
     erubis (2.7.0)
-    eventmachine (1.0.3)
-    eventmachine (1.0.3-x86-mingw32)
+    eventmachine (1.2.7)
+    eventmachine (1.2.7-x86-mingw32)
     execjs (1.4.0)
       multi_json (~> 1.0)
     hike (1.2.3)
@@ -52,7 +52,7 @@ GEM
     jquery-rails (2.2.1)
       railties (>= 3.0, < 5.0)
       thor (>= 0.14, < 2.0)
-    json (1.8.1)
+    json (1.8.6)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -67,11 +67,13 @@ GEM
       tzinfo (~> 0.3.22)
     moped (1.4.5)
     multi_json (1.10.1)
-    newrelic_rpm (3.6.9.171)
-    nokogiri (1.5.9)
-    nokogiri (1.5.9-x86-mingw32)
+    nokogiri (1.11.1)
+      racc (~> 1.4)
+    nokogiri (1.11.1-x86-mingw32)
+      racc (~> 1.4)
     origin (1.0.11)
     polyglot (0.3.5)
+    racc (1.5.2)
     rack (1.4.5)
     rack-cache (1.2)
       rack (>= 0.4)
@@ -137,7 +139,6 @@ DEPENDENCIES
   modernizr-rails
   mongo
   mongoid
-  newrelic_rpm
   nokogiri
   rails (~> 3.2)
   rails_12factor
@@ -146,7 +147,7 @@ DEPENDENCIES
   uglifier
 
 RUBY VERSION
-   ruby 2.1.8p440
+   ruby 2.4.10p364
 
 BUNDLED WITH
    1.13.7
