@@ -1,8 +1,8 @@
 source 'http://rubygems.org'
 
-ruby '2.4.10'
+ruby '3.1.2'
 
-gem 'rails', '~>3.2'
+gem 'rails', '~> 6.0.5'
 gem 'rails_12factor'
 gem 'thin'
 gem 'mongo'
