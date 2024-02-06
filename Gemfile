@@ -2,7 +2,7 @@ source 'http://rubygems.org'
 
 ruby '3.1.2'
 
-gem 'rails', '~> 6.1'
+gem 'rails', '~> 7.0'
 gem 'rails_12factor'
 gem 'thin'
 gem 'mongo'
