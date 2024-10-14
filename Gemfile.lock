@@ -144,7 +144,7 @@ GEM
     nokogiri (1.16.7-x86-mingw32)
       racc (~> 1.4)
     racc (1.8.1)
-    rack (2.2.9)
+    rack (2.2.10)
     rack-session (1.0.2)
       rack (< 3)
     rack-test (2.1.0)
