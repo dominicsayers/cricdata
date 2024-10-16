@@ -6,7 +6,7 @@ gem 'rails', '~> 8.0'
 gem 'rails_12factor'
 gem 'thin'
 gem 'mongo'
-gem 'mongoid'
+gem 'mongoid', git: "https://github.com/mongodb/mongoid"
 gem "moped"
 gem 'bson_ext'
 gem 'nokogiri'
