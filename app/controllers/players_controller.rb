@@ -4,8 +4,9 @@ class PlayersController < ApplicationController
   # GET /players/1
   # GET /players/1.json
   def show
-dp params # debug
-    @slug = params[:id]
+    permitted = params.permit(:id, :format)
+dp permitted # debug
+    @slug = permitted[:id]
 
     begin
       # Look for player with this id
@@ -35,9 +36,13 @@ dp params # debug
         player_refs = player_refs | player.player_refs
       end
 
+      dp player_refs, :pink # debug
+
       if player_refs.length == 1
         # Get canonical player (this may simply be a unique name part)
         @player = Player.where(master_ref: player_refs.first).first
+
+        dp @player, :blue # debug
 
         respond_to do |format|
           format.html # show.html.erb
@@ -57,8 +62,9 @@ dp params # debug
   # GET /players/test/xfactor
   # GET /players/test/xfactor.json
 	def xfactor
+    permitted = params.permit(:match_type_name)
 dp params # debug
-    match_types = MatchType.where(name: /#{params[:match_type_name]}/i)
+    match_types = MatchType.where(name: /#{permitted[:match_type_name]}/i)
 
     if match_types.length == 0
       respond_to do |format|

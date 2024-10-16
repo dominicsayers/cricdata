@@ -127,6 +127,7 @@ GEM
       activemodel (>= 5.1, < 7.3, != 7.0.0)
       concurrent-ruby (>= 1.0.5, < 2.0)
       mongo (>= 2.18.0, < 3.0.0)
+    moped (1.5.3)
     mutex_m (0.2.0)
     net-imap (0.4.16)
       date
@@ -232,6 +233,7 @@ DEPENDENCIES
   modernizr-rails
   mongo
   mongoid
+  moped
   nokogiri
   rails (~> 7.0)
   rails_12factor

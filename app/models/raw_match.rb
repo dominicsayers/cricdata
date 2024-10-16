@@ -4,8 +4,8 @@ class RawMatch
 
   # Fields
   field :match_ref, :type => Integer
-  field :html,      :type => String
-  field :zhtml,     :type => Moped::BSON::Binary
+  field :match_json, :type => String
+  field :scorecard_html, :type => String
 
 #  key :match_ref
   index({ match_ref:1 }, { unique:true })

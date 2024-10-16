@@ -1,7 +1,7 @@
 class IndividualScoresController < ApplicationController
   include ConsoleLog
 
-  before_filter :parse_match_type
+  before_action :parse_match_type
 
   def parse_match_type
     match_types = MatchType.where(name: /#{params[:match_type_name]}/i)

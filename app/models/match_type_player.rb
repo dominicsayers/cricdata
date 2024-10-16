@@ -52,10 +52,10 @@ class MatchTypePlayer
   # Validations
 
   # Scopes
-  scope :dirty, where(dirty: true)
-  scope :clean, where(dirty: false)
-  scope :indeterminate, where(:dirty.exists => false)
-  scope :xfactory, where(:xfactor.ne => nil).desc(:xfactor)
+  scope :dirty, ->{ where(dirty: true) }
+  scope :clean, ->{ where(dirty: false) }
+  scope :indeterminate, ->{ where(:dirty.exists => false) }
+  scope :xfactory, ->{ where(:xfactor.ne => nil).desc(:xfactor) }
 
   # Relationships
   belongs_to :player
@@ -100,33 +100,33 @@ class MatchTypePlayer
     # Update Player document
     # Scorecard name (master document)
     slug    = self.name.parameterize
-    player  = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+    player  = Player.find_or_create_by! slug:slug # slug is unique (fingers crossed)
     player.master_ref = player_ref
     player.name       = self.name
     player.fullname   = self.fullname
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, self._id
+    player.add_to_set(player_refs: player_ref)
+    player.add_to_set(match_type_player_ids: self._id)
 dp player, :pink # debug
-    player.save
+    player.save!
 
     self.player = player
     self.save
 
     # Full name
     slug    = self.fullname.parameterize
-    player  = Player.find_or_create_by slug:slug
-    player.add_to_set :player_refs, player_ref
-    player.add_to_set :match_type_player_ids, self._id
-    player.save
+    player  = Player.find_or_create_by! slug:slug
+    player.add_to_set(player_refs: player_ref)
+    player.add_to_set(match_type_player_ids: self._id)
+    player.save!
 
     # Name parts
     nameparts = self.fullname.split(' ')
 
     nameparts.each do |subslug|
       slug    = subslug.parameterize
-      player  = Player.find_or_create_by slug:slug
-      player.add_to_set :player_refs, player_ref
-      player.save
+      player  = Player.find_or_create_by! slug:slug
+      player.add_to_set(player_refs: player_ref)
+      player.save!
     end
   end
 
