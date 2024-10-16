@@ -13,22 +13,23 @@ class Search
   # Helpers
   def self::inspect_page page
     # Add any new matches on this page
-    url     = 'http://stats.espncricinfo.com/ci/engine/stats/index.json?class=11;page=%s;template=results;type=aggregate;view=results' % page
+    url     = 'https://stats.espncricinfo.com/ci/engine/stats/index.json?class=11;page=%s;template=results;type=aggregate;view=results' % page
     doc     = get_data(url)
     nodeset = doc.xpath('//a[text()="Match scorecard"]')
 
     $\ = ' ' # debug
 
     if nodeset.length == 0
+      dputs "Page #{page} has no matches", :red
       return false # page not found
     else
       nodeset.each do |node|
         match_href    = node.attributes['href'].value
         match_ref     = match_href.split('/').last.split('.').first
-#-dputs match_ref, :pink # debug
-        match         = Match.find_or_create_by match_ref:match_ref
+        match         = Match.find_or_create_by! match_ref:match_ref
+
         match.parsed  = false if match.parsed.nil?
-        match.save
+        match.save!
 
         break unless match.persisted?
 
@@ -53,14 +54,15 @@ class Search
 
     # Inspect this & subsequent pages
     loop do
+      dputs "Inspecting page #{lastpage}", :green
       break unless inspect_page lastpage
+      Settings.set(:lastpage, lastpage)
       lastpage += 1
     end
 
     lastpage -= 1 # The last page we looked for was the one that didn't exist
 
     # Wrap up
-    Settings.set(:lastpage, lastpage)
     @search.maxpage = lastpage
     @search.save
   end

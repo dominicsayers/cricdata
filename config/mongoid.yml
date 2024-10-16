@@ -1,25 +1,18 @@
 development:
-  sessions:
+  clients:
     default:
       database: cricdata_development
       hosts:
-        - db.cricdata.org:27017
-      options:
-        consistency: :strong
+        - localhost:27017
 test:
-  sessions:
+  clients:
     default:
       database: cricdata_test
       hosts:
         - localhost:27017
-      options:
-        consistency: :strong
 production:
-  sessions:
+  clients:
     default:
       database: "<%= ENV['MONGOID_DATABASE'] %>"
       hosts:
         - "<%= ENV['MONGOID_HOST'] %>:<%= ENV['MONGOID_PORT'] %>"
-      options:
-        consistency: :strong
-

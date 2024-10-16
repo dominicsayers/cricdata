@@ -26,7 +26,7 @@ class IndividualScore
   belongs_to :inning
 
   # Scopes
-  default_scope asc(:type_number).desc(:runs)
+  default_scope ->{ asc(:type_number).desc(:runs) }
 
   # Helpers
   # Register an individual score

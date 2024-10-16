@@ -48,14 +48,14 @@ class Performance
   # Validations
 
   # Scopes
-  scope :batting, where(:runs.exists => true)
-  scope :bowling, where(:runs.exists => false)
+  scope :batting, ->{ where(:runs.exists => true) }
+  scope :bowling, ->{ where(:runs.exists => false) }
 #  default_scope asc(:inning_id, :match_type_player_id)
 
   # Relationships
   belongs_to :match_type_player
   belongs_to :inning
-  belongs_to :player
+  belongs_to :player, optional: true
 
   # Helpers
 end

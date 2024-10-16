@@ -21,7 +21,7 @@ dputs uri # debug
     case response
     when Net::HTTPSuccess, Net::HTTPNotModified
       @attempts = 0
-      return response.body
+      return response.body.force_encoding("UTF-8")
     when Net::HTTPRedirection
       location = response['location']
 dputs 'Redirecting...' # debug

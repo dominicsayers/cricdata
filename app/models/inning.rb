@@ -21,4 +21,7 @@ class Inning
   has_many :performances
 
   # Helpers
+  def to_s
+    "Match: #{self.match}, inning number: #{self.inning_number}, summary: #{self.summary}"
+  end
 end

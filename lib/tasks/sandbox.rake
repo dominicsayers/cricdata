@@ -8,24 +8,32 @@ include Fetch
 include Mongo
 
 namespace :sandbox do
-	task :fixup_performances => :environment do
+  desc 'Fetch & parse particular match'
+  task :parse_match => :environment do
+      match_ref = ENV['MATCH_REF']
+      dputs "Parsing match #{match_ref}..."
+      Match.parse match_ref
+      dputs 'done.'
+  end
+
+  task :fixup_performances => :environment do
 		$\ = ' '
-    
+
     Performance.where(:type_number.exists => false).each do |pf|
 			dprint pf.match_type_player_id
 			dprint pf.inning_id
 
       mtp = MatchTypePlayer.find pf.match_type_player_id
 			dprint mtp.fullname
-      
+
       match_id = pf.inning_id.split('-').first()
       match = Match.find match_id
       dprint match_id
       dprint match.date_start
- 
+
       type_number = pf.match_type_player_id.split('-').first()
       dprint type_number
-      
+
       pf.name         = mtp.fullname
       pf.date_start   = match.date_start
       pf.type_number  = type_number
@@ -58,7 +66,7 @@ dputs db_name
 			dprint pf['name']
 
       inning = Inning.find pf['inning_id']
-      
+
 dputs ' ' # debug
 		end
 	end

@@ -14,6 +14,12 @@ if defined?(Bundler)
   # Bundler.require(:default, :assets, Rails.env)
 end
 
+require "bson"
+require "moped"
+Moped::BSON = BSON
+
+Mongoid.logger.level = Logger::WARN
+
 module Cricdata
   class Application < Rails::Application
     config.assets.initialize_on_precompile = false
@@ -54,5 +60,8 @@ module Cricdata
 
     # Fix for modernizr issue in Heroku
     config.assets.precompile += %w( modernizr.js )
+
+
+    config.load_defaults 7.0
   end
 end

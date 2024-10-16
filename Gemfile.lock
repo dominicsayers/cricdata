@@ -127,11 +127,12 @@ GEM
     modernizr-rails (2.7.1)
     mongo (2.21.0)
       bson (>= 4.14.1, < 6.0.0)
-    mongoid (1.0.6)
-      activesupport (>= 2.2.2)
-      durran-validatable (>= 2.0.1)
-      leshill-will_paginate (>= 2.3.11)
-      mongo (>= 0.18.2)
+    mongoid (9.0.2)
+      activemodel (>= 5.1, < 7.3, != 7.0.0)
+      concurrent-ruby (>= 1.0.5, < 2.0)
+      mongo (>= 2.18.0, < 3.0.0)
+    moped (1.5.3)
+    mutex_m (0.2.0)
     net-imap (0.5.0)
       date
       net-protocol
@@ -246,6 +247,7 @@ DEPENDENCIES
   modernizr-rails
   mongo
   mongoid
+  moped
   nokogiri
   rails (~> 8.0)
   rails_12factor

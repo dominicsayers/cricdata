@@ -7,6 +7,7 @@ gem 'rails_12factor'
 gem 'thin'
 gem 'mongo'
 gem 'mongoid'
+gem "moped"
 gem 'bson_ext'
 gem 'nokogiri'
 
@@ -18,6 +19,6 @@ group :assets do
   gem 'uglifier'
 end
 
-# JavasScript libs
+# Javascript libs
 gem 'jquery-rails'
 gem 'modernizr-rails'
