@@ -10,7 +10,7 @@ dp permitted # debug
 
     begin
       # Look for player with this id
-      players       = Player.where(slug:@slug)
+      players       = Player.where(id: BSON::ObjectId(@slug))
     rescue
       # Couldn't find a matching player, so search by slug
       if /\d+/.match @slug

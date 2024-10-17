@@ -42,7 +42,7 @@ class Match
       template << text.to_sym
     end
 
-    dputs template, :yellow # debug
+    #-dputs template, :yellow # debug
     return template
   end
 
@@ -213,7 +213,7 @@ dputs "Parsing match #{match_ref}" # debug
       stats[inning_number][borb] << pf unless pf == {} # save current performance hash
     end
 
-dputs stats, :white # debug
+#-dputs stats, :white # debug
 
     # Now we have the stats gathered into a hash, we can parse out the
     # players' performmances
@@ -311,7 +311,7 @@ dp p, :white # debug
         performance.name          = p[:name]
 
         performance.save
-dp performance
+#-dp performance # debug
       end
     end
 
