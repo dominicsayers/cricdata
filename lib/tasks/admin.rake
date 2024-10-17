@@ -49,7 +49,7 @@ namespace :admin do
           type_number, player_ref = match_type_player_id.split('-')
 
           # Get fielding data
-          url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, type_number]
+          url = 'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [player_ref, type_number]
           dputs ''
           doc = get_data url
 

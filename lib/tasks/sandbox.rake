@@ -479,7 +479,7 @@ dputs " #{mtp.xfactor}"
   end
 
   task :mtp_name => :environment do
-    url     = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % ["52057", 1]
+    url     = 'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % ["52057", 1]
     doc     = get_data url
 
     name      = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip

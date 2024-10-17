@@ -66,7 +66,7 @@ class MatchTypePlayer
   # Get player data (including fielding performances)
   def get_player_data
     # Get fielding data
-    url = 'http://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [self.player_ref, self.type_number]
+    url = 'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % [self.player_ref, self.type_number]
     doc = get_data url
 
     return doc
