@@ -95,7 +95,7 @@ GEM
     connection_pool (2.4.1)
     crass (1.0.6)
     daemons (1.4.1)
-    date (3.3.4)
+    date (3.4.0)
     drb (2.2.1)
     erubi (1.13.0)
     eventmachine (1.2.7)
