@@ -7,11 +7,11 @@ class MatchType
   T20I  = 3
 
   # Fields
-  field :type_number, :type => Integer
-  field :name,        :type => String
+  field :type_number, type: Integer
+  field :name,        type: String
 
-#  key :type_number
-  index({ type_number:1 }, { unique:true })
+  #  key :type_number
+  index({ type_number: 1 }, { unique: true })
 
   # Validations
 

@@ -1,7 +1,7 @@
 require 'net/http'
 require 'mongo'
-require "#{Rails.root}/app/helpers/console_log"
-require "#{Rails.root}/app/helpers/fetch"
+require "#{Rails.root.join('app/helpers/console_log')}"
+require "#{Rails.root.join('app/helpers/fetch')}"
 
 include ConsoleLog
 include Fetch
@@ -9,126 +9,124 @@ include Mongo
 
 namespace :sandbox do
   desc 'Fetch & parse particular match'
-  task :parse_match => :environment do
-      match_ref = ENV['MATCH_REF']
-      dputs "Parsing match #{match_ref}..."
-      Match.parse match_ref
-      dputs 'done.'
+  task parse_match: :environment do
+    match_ref = ENV.fetch('MATCH_REF', nil)
+    dputs "Parsing match #{match_ref}..."
+    Match.parse match_ref
+    dputs 'done.'
   end
 
-  task :fixup_performances => :environment do
-		$\ = ' '
+  task fixup_performances: :environment do
+    $\ = ' '
 
     Performance.where(:type_number.exists => false).each do |pf|
-			dprint pf.match_type_player_id
-			dprint pf.inning_id
+      dprint pf.match_type_player_id
+      dprint pf.inning_id
 
       mtp = MatchTypePlayer.find pf.match_type_player_id
-			dprint mtp.fullname
+      dprint mtp.fullname
 
-      match_id = pf.inning_id.split('-').first()
+      match_id = pf.inning_id.split('-').first
       match = Match.find match_id
       dprint match_id
       dprint match.date_start
 
-      type_number = pf.match_type_player_id.split('-').first()
+      type_number = pf.match_type_player_id.split('-').first
       dprint type_number
 
       pf.name         = mtp.fullname
       pf.date_start   = match.date_start
       pf.type_number  = type_number
       pf.save
-dputs ' ' # debug
-		end
-	end
+      dputs ' ' # debug
+    end
+  end
 
-	task :list_performances_by_country => :environment do
-		$\ = ' '
+  task list_performances_by_country: :environment do
+    $\ = ' '
 
-		# Using mongo gem directly because of the size of the result set
-		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
-			hostname	= 'burdett.moo.li'
-			db_name		= 'cricdata'
-		else
-			hostname	= 'localhost'
-			db_name		= 'cricdata_development'
-		end
+    # Using mongo gem directly because of the size of the result set
+    if %w[test production].include?(ENV['RAILS_ENV'])
+      hostname	= 'burdett.moo.li'
+      db_name		= 'cricdata'
+    else
+      hostname	= 'localhost'
+      db_name		= 'cricdata_development'
+    end
 
-		db 			= Connection.new(hostname).db db_name
-		pfs			= db.collection('performances')
-dputs db.connection.host
-dputs db_name
+    db 			= Connection.new(hostname).db db_name
+    pfs			= db.collection('performances')
+    dputs db.connection.host
+    dputs db_name
 
-#		pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
-		pfs.find().each do |pf|
-			dprint pf['type_number']
-			dprint pf['inning_id']
-			dprint pf['name']
+    #		pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
+    pfs.find.each do |pf|
+      dprint pf['type_number']
+      dprint pf['inning_id']
+      dprint pf['name']
 
-      inning = Inning.find pf['inning_id']
+      Inning.find pf['inning_id']
 
-dputs ' ' # debug
-		end
-	end
+      dputs ' ' # debug
+    end
+  end
 
-	task :initials => :environment do
-		$\ = ' '
+  task initials: :environment do
+    $\ = ' '
 
-		Player.where(:name.exists => true).each do |player|
-			initials = player.slug.split('-').first
-			forename = player.fullname.split(' ').first.downcase
+    Player.where(:name.exists => true).each do |player|
+      initials = player.slug.split('-').first
+      forename = player.fullname.split(' ').first.downcase
 
-			if initials != forename
-				l = initials.length
-				if l > 4
-					dprint player.slug
-					dprint player.name
-					dprint initials, :white
-					dprint forename, :cyan
-					dputs l, :red
-				end
-			end
-		end
-	end
+      next unless initials != forename
 
-	task :scores => :environment do
-		$\ = ' '
+      l = initials.length
+      next unless l > 4
 
-		type_number	= MatchType::NONE
-		runs				= -1
+      dprint player.slug
+      dprint player.name
+      dprint initials, :white
+      dprint forename, :cyan
+      dputs l, :red
+    end
+  end
 
-		# Using mongo gem directly because of the size of the result set
-		if [ 'test', 'production' ].include?(ENV['RAILS_ENV'])
-			hostname	= 'burdett.moo.li'
-			db_name		= 'cricdata'
-		else
-			hostname	= 'localhost'
-			db_name		= 'cricdata_development'
-		end
-		db 			= Connection.new(hostname).db db_name
-		pfs			= db.collection('performances')
-dputs db.connection.host
-dputs db_name
+  task scores: :environment do
+    $\ = ' '
 
-		pfs.find(:runs => {'$ne' => nil}).sort( [ [:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING], [:runs, Mongo::ASCENDING] ] ).each do |pf|
-			dprint pf['type_number']
-			dprint pf['date_start']
-			dprint pf['runs']
-			dprint pf['name']
+    # Using mongo gem directly because of the size of the result set
+    if %w[test production].include?(ENV['RAILS_ENV'])
+      hostname	= 'burdett.moo.li'
+      db_name		= 'cricdata'
+    else
+      hostname	= 'localhost'
+      db_name		= 'cricdata_development'
+    end
+    db 			= Connection.new(hostname).db db_name
+    pfs			= db.collection('performances')
+    dputs db.connection.host
+    dputs db_name
 
-#			IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
-dputs ' ' # debug
-		end
-	end
+    pfs.find(runs: { '$ne' => nil }).sort([[:type_number, Mongo::ASCENDING], [:date_start, Mongo::ASCENDING],
+                                           [:runs, Mongo::ASCENDING]]).each do |pf|
+      dprint pf['type_number']
+      dprint pf['date_start']
+      dprint pf['runs']
+      dprint pf['name']
 
-  task :env => :environment do
-    dputs ENV['RAILS_ENV']
+      #			IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
+      dputs ' ' # debug
+    end
+  end
 
-    db_name = [ 'test', 'production' ].include?(ENV['RAILS_ENV']) ? 'cricdata' : 'cricdata_development'
+  task env: :environment do
+    dputs ENV.fetch('RAILS_ENV', nil)
+
+    db_name = %w[test production].include?(ENV['RAILS_ENV']) ? 'cricdata' : 'cricdata_development'
     dputs db_name
   end
 
-  task :match_age => :environment do
+  task match_age: :environment do
     $\ = ' '
 
     Match.all.each do |match|
@@ -139,27 +137,26 @@ dputs ' ' # debug
     end
   end
 
-  task :update_players_no_fielding => :environment do
+  task update_players_no_fielding: :environment do
     $\ = ' '
 
     # Mark all players dirty
-		MatchTypePlayer.all.update_all(dirty:true)
+    MatchTypePlayer.all.update_all(dirty: true)
 
     # Update players without refetching fielding data
     MatchTypePlayer.dirty.each do |mtp|
-      MatchTypePlayer::update_statistics mtp, false
+      MatchTypePlayer.update_statistics mtp, false
     end
-
   end
 
-  task :new_stats => :environment do
+  task new_stats: :environment do
     $\ = ' '
 
     Performance.destroy_all
 
     Match.all.each do |match|
       match_ref = match.match_ref
-dputs match_ref, :white # debug
+      dputs match_ref, :white # debug
       # Get match data
       raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
@@ -181,19 +178,19 @@ dputs match_ref, :white # debug
 
       inning_nodeset.each do |inning_node|
         inning_header_nodeset = inning_node.xpath('td/b')
-        stats_template[inning_number] = {:batting => [], :bowling => []} unless stats_template.has_key? inning_number
-#-dputs borb
-#-dputs "Innings #{inning_number}"
+        stats_template[inning_number] = { batting: [], bowling: [] } unless stats_template.has_key? inning_number
+        # -dputs borb
+        # -dputs "Innings #{inning_number}"
 
         inning_header_nodeset.each do |inning_header_node|
           # Gather the column headings: R M B 4s 6s SR etc.
-#-dp inning_header_node, :pink
-#-dputs inning_header_node.children.length, :pink
+          # -dp inning_header_node, :pink
+          # -dputs inning_header_node.children.length, :pink
           text = inning_header_node.children.length == 0 ? :Extras : inning_header_node.children.first.text
           text = :Extras if text.nil?
           stats_template[inning_number][borb] << text.to_sym
         end
-#-dp stats_template[inning_number][borb]
+        # -dp stats_template[inning_number][borb]
 
         if borb == :bowling
           inning_number += 1
@@ -202,7 +199,7 @@ dputs match_ref, :white # debug
           borb = :bowling
         end
       end
-#-dp stats_template, :cyan
+      # -dp stats_template, :cyan
 
       # Innings
       inning_nodeset  = doc.xpath("//tr[@class='inningsRow']/td")
@@ -218,7 +215,7 @@ dputs match_ref, :white # debug
         firstchild    = inning_node.children.first
         text          = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
 
-        stats[inning_number] = {:batting => [], :bowling => []} unless stats.has_key? inning_number
+        stats[inning_number] = { batting: [], bowling: [] } unless stats.has_key? inning_number
 
         case classname.to_sym
         when :playerName
@@ -229,13 +226,13 @@ dputs match_ref, :white # debug
           href          = '/ci/content/player/'
           href_len      = href.length
           href          = player_node.attributes['href'].value
-          pf            = {name:player_node.children.first.content, ref:href[href_len..-1].split('.').first}
+          pf            = { name: player_node.children.first.content, ref: href[href_len..-1].split('.').first }
           stats_counter = 0
         when :inningsDetails
           stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
           # Innings summary, so start a new performance hash
-          pf            = {name:text, ref:0}
+          pf            = { name: text, ref: 0 }
           stats_counter = 0
         when :battingDismissal
           if borb == :bowling
@@ -245,22 +242,22 @@ dputs match_ref, :white # debug
             stats_counter = 0
           end
 
-          pf[:howout]     = text
+          pf[:howout] = text
         when :battingRuns, :battingDetails
-          key             = stats_template[inning_number][borb][stats_counter]
-#-dprint "#{stats_counter} #{key}", :pink
-          stats_counter   += 1
-          pf[key]         = text
+          key = stats_template[inning_number][borb][stats_counter]
+          # -dprint "#{stats_counter} #{key}", :pink
+          stats_counter += 1
+          pf[key] = text
         when :bowlingDetails
           if borb == :batting
             borb          = :bowling
             stats_counter = 0
           end
 
-          key             = stats_template[inning_number][borb][stats_counter]
-#-dprint "#{stats_counter} #{key}", :pink
-          stats_counter   += 1
-          pf[key]         = text
+          key = stats_template[inning_number][borb][stats_counter]
+          # -dprint "#{stats_counter} #{key}", :pink
+          stats_counter += 1
+          pf[key] = text
         end
       end
 
@@ -276,7 +273,7 @@ dputs match_ref, :white # debug
 
         # Batting
         stats[inning_number][:batting].each do |p|
-dp p, :white
+          dp p, :white
           if p[:ref] == 0
             # Record innings analysis
             if p[:name].downcase == 'extras'
@@ -305,14 +302,14 @@ dp p, :white
             performance.notout        = p[:howout].downcase.in?(['not out', 'retired hurt', 'absent hurt'])
 
             performance.save
-dp performance
+            dp performance
           end
 
           inning.save
         end
 
         stats[inning_number][:bowling].each do |p|
-dp p, :white
+          dp p, :white
 
           # Record bowling analysis
           overs = p[:O]
@@ -342,45 +339,45 @@ dp p, :white
           performance.extras        = p[:Extras]
 
           performance.save
-dp performance
+          dp performance
         end
       end
     end
   end
 
-  task :deflate_raw_match => :environment do
-      $\ = ' '
+  task deflate_raw_match: :environment do
+    $\ = ' '
 
     raw_match = RawMatch.first
     zhtml = Zlib::Deflate.deflate(raw_match.html)
-  dp zhtml, :pink # debug
-  dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+    dp zhtml, :pink # debug
+    dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
     raw_match.zhtml = BSON::Binary.new(zhtml)
-  dp raw_match.zhtml, :cyan # debug
+    dp raw_match.zhtml, :cyan # debug
     raw_match.save
   end
 
-  task :reparse_T20Is => :environment do
-    Match.where(match_type_id:"3").each do |match|
+  task reparse_T20Is: :environment do
+    Match.where(match_type_id: '3').each do |match|
       match_ref = match.match_ref
       dputs match_ref, :white
       Match.parse match_ref
     end
   end
 
-  task :fixup_performances => :environment do
-$\= ' '
+  task fixup_performances: :environment do
+    $\ = ' '
 
-    Performance.where(:player_id.exists => true).limit(65000).each do |pf|
-#      pf.match_type_player_id = pf.player_id
+    Performance.where(:player_id.exists => true).limit(65_000).each do |pf|
+      #      pf.match_type_player_id = pf.player_id
       pf.unset(:player_id)
       pf.save
-dprint pf.match_type_player_id
+      dprint pf.match_type_player_id
     end
-dputs "\r\ndone"
+    dputs "\r\ndone"
   end
 
-  task :player_friendly_id => :environment do
+  task player_friendly_id: :environment do
     $\ = ' '
 
     Player.destroy_all
@@ -396,7 +393,7 @@ dputs "\r\ndone"
         slug = mtp.name.parameterize
         dprint slug, :cyan
 
-        player = Player.find_or_create_by slug:slug # slug is unique (fingers crossed)
+        player = Player.find_or_create_by slug: slug # slug is unique (fingers crossed)
 
         player.add_to_set :player_refs, mtp.player_ref
         player.save
@@ -410,7 +407,7 @@ dputs "\r\ndone"
         slug = mtp.fullname.parameterize
         dprint slug, :cyan
 
-        player = Player.find_or_create_by slug:slug
+        player = Player.find_or_create_by slug: slug
 
         player.add_to_set :player_refs, mtp.player_ref
         player.add_to_set :match_type_player_ids, mtp._id
@@ -424,7 +421,7 @@ dputs "\r\ndone"
           slug = subslug.parameterize
           dprint slug, :cyan
 
-          player = Player.find_or_create_by slug:slug
+          player = Player.find_or_create_by slug: slug
 
           player.add_to_set :player_refs, mtp.player_ref
 
@@ -437,7 +434,7 @@ dputs "\r\ndone"
     end
   end
 
-  task :career_span => :environment do
+  task career_span: :environment do
     $\ = ' '
 
     zeroday = Match.min(:date_start).to_date
@@ -467,44 +464,47 @@ dputs "\r\ndone"
     end
   end
 
-  task :xfactor => :environment do
+  task xfactor: :environment do
     MatchTypePlayer.all.each do |mtp|
       next if mtp.bat_average.nil?
       next if mtp.bowl_average.nil?
-dprint mtp.name
+
+      dprint mtp.name
       mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
-dputs " #{mtp.xfactor}"
+      dputs " #{mtp.xfactor}"
       mtp.save
     end
   end
 
-  task :mtp_name => :environment do
-    url     = 'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings' % ["52057", 1]
-    doc     = get_data url
+  task mtp_name: :environment do
+    url = format(
+      'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings', '52057', 1
+    )
+    doc = get_data url
 
-    name      = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
-  dp name
+    name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
+    dp name
 
     scripts = doc.xpath('//script')
 
     scripts.each do |script|
       /var omniPageName.+:(.+)";/i.match(script.content[0..100])
 
-      unless $1.nil?
-  dp $1, :pink
+      unless Regexp.last_match(1).nil?
+        dp Regexp.last_match(1), :pink
         break
       end
     end
   end
 
-  task :match_dates => :environment do
-      $\ = ' '
+  task match_dates: :environment do
+    $\ = ' '
 
     Match.all.each do |match|
-      match_ref         = match.match_ref
-  dprint match_ref # debug
+      match_ref = match.match_ref
+      dprint match_ref # debug
       # Get match data
-      raw_match       = RawMatch.find_or_create_by(match_ref: match_ref)
+      raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
       if raw_match.html.blank?
         url             = 'http://www.espncricinfo.com/ci/engine/match/%s.json?view=scorecard' % match_ref
@@ -512,18 +512,18 @@ dputs " #{mtp.xfactor}"
         raw_match.save
       end
 
-      doc         = Nokogiri::HTML raw_match.html
+      doc = Nokogiri::HTML raw_match.html
 
       # Parse dates
-      title = doc.xpath("//title").first.children.first.content
+      title = doc.xpath('//title').first.children.first.content
       /.+?,\s(\w{3})\s([0-9]{1,2})(?:,\s([0-9]+))*(?:\s*(?:-)*\s*(\w{3})*\s*([0-9]{1,2}),\s([0-9]+))*/i.match(title)
 
-      m1 = $1
-      d1 = $2
-      y1 = $3
-      m2 = $4
-      d2 = $5
-      y2 = $6
+      m1 = Regexp.last_match(1)
+      d1 = Regexp.last_match(2)
+      y1 = Regexp.last_match(3)
+      m2 = Regexp.last_match(4)
+      d2 = Regexp.last_match(5)
+      y2 = Regexp.last_match(6)
 
       y1 = y2 if y1.blank?
       m2 = m1 if m2.blank?
@@ -533,28 +533,28 @@ dputs " #{mtp.xfactor}"
       m1n = Date::ABBR_MONTHNAMES.index(m1)
       m2n = Date::ABBR_MONTHNAMES.index(m2)
 
-      date_start  = Date.new(y1.to_i, m1n, d1.to_i)
-      date_end    = Date.new(y2.to_i, m2n, d2.to_i)
+      Date.new(y1.to_i, m1n, d1.to_i)
+      Date.new(y2.to_i, m2n, d2.to_i)
     end
   end
 
-  task :deflate_raw_match => :environment do
-      $\ = ' '
+  task deflate_raw_match: :environment do
+    $\ = ' '
 
     raw_match = RawMatch.first
     zhtml = Zlib::Deflate.deflate(raw_match.html)
-  dp zhtml, :pink # debug
-  dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+    dp zhtml, :pink # debug
+    dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
     raw_match.zhtml = BSON::Binary.new(zhtml)
-  dp raw_match.zhtml, :cyan # debug
+    dp raw_match.zhtml, :cyan # debug
     raw_match.save
   end
 
-  task :inflate_raw_match => :environment do
+  task inflate_raw_match: :environment do
     raw_match = RawMatch.first
     zhtml = raw_match.zhtml.to_s
     html = Zlib::Inflate.inflate(zhtml)
-  dputs "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
-  dputs html, :cyan
+    dputs "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
+    dputs html, :cyan
   end
 end

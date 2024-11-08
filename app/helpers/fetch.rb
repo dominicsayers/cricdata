@@ -1,12 +1,12 @@
 module Fetch
-  def get_response query
-dputs "Getting #{query}" # debug
+  def get_response(query)
+    dputs "Getting #{query}" # debug
     @attempts ||= 0
-    @attempts +=1
-    raise StandardError, "Too many redirects" if @attempts > 10
+    @attempts += 1
+    raise StandardError, 'Too many redirects' if @attempts > 10
 
     uri = URI.parse query
-dputs uri # debug
+    dputs uri # debug
     case uri.scheme
     when 'https'
       connection              = Net::HTTP.new(uri.host, uri.port)
@@ -21,17 +21,17 @@ dputs uri # debug
     case response
     when Net::HTTPSuccess, Net::HTTPNotModified
       @attempts = 0
-      return response.body.force_encoding("UTF-8")
+      response.body.force_encoding('UTF-8')
     when Net::HTTPRedirection
       location = response['location']
-dputs 'Redirecting...' # debug
-      return get_response(location) # recursion!
+      dputs 'Redirecting...' # debug
+      get_response(location) # recursion!
     else
       raise StandardError, "Status code #{response.code} received for request #{query}"
     end
   end
 
-  def get_data query
-    return Nokogiri::HTML get_response(query)
+  def get_data(query)
+    Nokogiri::HTML get_response(query)
   end
 end

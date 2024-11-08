@@ -2,11 +2,11 @@ class Ground
   include Mongoid::Document
 
   # Fields
-  field :ground_ref, :type => Integer
-  field :name, :type => String
+  field :ground_ref, type: Integer
+  field :name, type: String
 
-#  key :ground_ref
-  index({ ground_ref:1 }, { unique:true })
+  #  key :ground_ref
+  index({ ground_ref: 1 }, { unique: true })
 
   # Validations
 

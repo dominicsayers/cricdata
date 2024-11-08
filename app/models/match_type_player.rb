@@ -308,7 +308,6 @@ class MatchTypePlayer
     wickets         = 0
     bowl_average    = 0.0
     bowl_strikerate = 0.0
-    economy         = 0.0
 
     # Fielding stats
     dismissals      = 0
@@ -359,7 +358,7 @@ class MatchTypePlayer
         wickets       += pf.wickets
 
         # Assume 6-ball overs for now
-        pf.strikerate = (pf.oddballs + 6 * pf.overs).to_f / pf.wickets.to_f if pf.wickets > 0
+        pf.strikerate = (pf.oddballs + (6 * pf.overs)).to_f / pf.wickets.to_f if pf.wickets > 0
 
         # Parse overs and odd balls into useful numbers
         ballsdelivered  = oddballs + (6 * overs)
