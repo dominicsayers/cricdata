@@ -21,4 +21,12 @@ class MatchType
 
   # Relationships
   has_many :matches, dependent: :restrict_with_exception
+
+  def self.from_slug(slug)
+    case slug
+    when 'test' then MatchType.find_by(type_number: TEST)
+    when 'odi' then MatchType.find_by(type_number: ODI)
+    when 't20i' then MatchType.find_by(type_number: T20I)
+    end
+  end
 end

@@ -65,14 +65,10 @@ class PlayersController < ApplicationController
   def xfactor
     permitted = params.permit(:match_type_name)
     # -dp params # debug
-    match_types = MatchType.where(name: /#{permitted[:match_type_name]}/i)
+    match_type = MatchType.from_slug(permitted[:match_type_name])
 
-    if match_types.empty?
-      respond_to do |format|
-        format.html { render 'match_types/unrecognised' }
-      end
-    else
-      type_number = match_types.first.type_number
+    if match_type
+      type_number = match_type.type_number
       @rubric     = {}
 
       case type_number
@@ -104,6 +100,10 @@ class PlayersController < ApplicationController
       respond_to do |format|
         format.html { render 'match_type_players/xfactor' }
         format.json { render json: @mtps }
+      end
+    else
+      respond_to do |format|
+        format.html { render 'match_types/unrecognised' }
       end
     end
   end

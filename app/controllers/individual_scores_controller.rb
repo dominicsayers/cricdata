@@ -6,14 +6,15 @@ class IndividualScoresController < ApplicationController
   before_action :parse_match_type
 
   def parse_match_type
-    match_types = MatchType.where(name: /#{params[:match_type_name]}/i)
+    permitted = params.permit(:match_type_name)
+    match_type = MatchType.from_slug(permitted[:match_type_name])
 
-    if match_types.empty?
+    if match_type
+      @type_number = match_type.type_number
+    else
       respond_to do |format|
         format.html { render 'match_types/unrecognised' }
       end
-    else
-      @type_number = match_types.first.type_number
     end
   end
 
