@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
-class SearchesControllerTest < ActionController::TestCase
+class SearchesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @search = searches(:one)
   end

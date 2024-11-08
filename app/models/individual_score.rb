@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class IndividualScore
   include Mongoid::Document
 
@@ -76,7 +78,7 @@ class IndividualScore
     score.notouts   = (score.notouts.blank? ? 1 : score.notouts + 1) if notout
 
     # Is this an earlier (or the first) performance?
-    if score.date_start.blank? or date_start < score.date_start
+    if score.date_start.blank? || (date_start < score.date_start)
       score.inning      = inning
       score.player      = match_type_player.player
       score.name        = match_type_player.name
@@ -86,7 +88,7 @@ class IndividualScore
     dp match_type_player, :pink # debug
 
     # Is this a later (or the last) performance?
-    if score.latest_date.blank? or date_start > score.latest_date
+    if score.latest_date.blank? || (date_start > score.latest_date)
       score.latest_name       = match_type_player.name
       score.latest_date       = date_start
       score.latest_player_id  = match_type_player.player._id

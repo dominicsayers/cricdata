@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Fetch
   def get_response(query)
     dputs "Getting #{query}" # debug

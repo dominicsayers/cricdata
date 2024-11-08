@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'net/http'
-require "#{Rails.root.join('app/helpers/console_log')}"
-require "#{Rails.root.join('app/helpers/fetch')}"
+require Rails.root.join('app/helpers/console_log').to_s
+require Rails.root.join('app/helpers/fetch').to_s
 
 include ConsoleLog
 include Fetch
@@ -11,7 +13,7 @@ namespace :admin do
     $\ = ' '
 
     dputs 'Marking all players as dirty...'
-    MatchTypePlayer.all.update_all(dirty: true)
+    MatchTypePlayer.update_all(dirty: true)
     dputs 'done.'
   end
 
@@ -25,7 +27,7 @@ namespace :admin do
     $\ = ' '
 
     dputs 'Updating all X-factors...'
-    MatchTypePlayer.all.each do |mtp|
+    MatchTypePlayer.find_each do |mtp|
       dprint mtp.fullname, :cyan
       MatchTypePlayer.update_xfactor mtp
     end
@@ -37,7 +39,7 @@ namespace :admin do
 
     $\ = ' '
 
-    Performance.all.each do |pf|
+    Performance.find_each do |pf|
       match_type_player_id = pf.match_type_player_id
 
       begin

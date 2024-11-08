@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
-class StaticControllerTest < ActionController::TestCase
+class StaticControllerTest < ActionDispatch::IntegrationTest
   # test "the truth" do
   #   assert true
   # end

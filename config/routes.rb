@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Cricdata::Application.routes.draw do
   root to: 'static#api'
 

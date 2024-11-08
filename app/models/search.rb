@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Search
   include Mongoid::Document
 
@@ -19,7 +21,7 @@ class Search
 
     $\ = ' ' # debug
 
-    if nodeset.length == 0
+    if nodeset.empty?
       dputs "Page #{page} has no matches", :red
       false # page not found
     else
@@ -45,7 +47,7 @@ class Search
   end
 
   def self.new_matches
-    @search = create occasion: Time.now, games: []
+    @search = create occasion: Time.zone.now, games: []
 
     # What was the last page we found last time?
     lastpage = (Settings.get(:lastpage) || 1).to_i

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MatchTypePlayer
   include Mongoid::Document
 
@@ -120,7 +122,7 @@ class MatchTypePlayer
     player.save!
 
     # Name parts
-    nameparts = fullname.split(' ')
+    nameparts = fullname.split
 
     nameparts.each do |subslug|
       slug    = subslug.parameterize
@@ -149,7 +151,7 @@ class MatchTypePlayer
     nodeset = doc.xpath('//tr[@class="data1"]')
     lastmatch = 0
 
-    return false if nodeset.length == 0
+    return false if nodeset.empty?
 
     # page not found
 
@@ -170,12 +172,12 @@ class MatchTypePlayer
         mtp.save
       else
         href            = match_node.attributes['href'].value
-        match_ref       = href[href_len..-1].split('.').first
+        match_ref       = href[href_len..].split('.').first
         # -dprint match_ref, :pink # debug
         matches         = Match.where(match_ref: match_ref)
         # -dprint matches.length, :pink # debug
 
-        if matches.length == 0
+        if matches.empty?
           dputs "Match #{match_ref} not found", :red
           exit
         else
@@ -209,7 +211,7 @@ class MatchTypePlayer
       end
     end
 
-    return if lastmatch == 0
+    return if lastmatch.zero?
 
     mtp.lastmatch = lastmatch
     mtp.save
@@ -280,7 +282,7 @@ class MatchTypePlayer
     performances = Performance.where(match_type_player_id: match_type_player_id)
 
     # A player may have no performances, in which case we don't need them
-    if performances.length == 0
+    if performances.empty?
       dputs 'No performances', :red
       mtp.destroy
       return false
@@ -336,12 +338,12 @@ class MatchTypePlayer
         fours       += pf.fours   || 0
         sixes       += pf.sixes   || 0
 
-        if completed > 0
-          bat_average = runs.to_f / completed.to_f
+        if completed.positive?
+          bat_average = runs.to_f / completed
           pf.average  = bat_average
         end
 
-        if balls > 0
+        if balls.positive?
           bat_strikerate    = 100 * runs.to_f / balls.to_f
           pf.cum_strikerate = bat_strikerate
         end
@@ -358,23 +360,23 @@ class MatchTypePlayer
         wickets       += pf.wickets
 
         # Assume 6-ball overs for now
-        pf.strikerate = (pf.oddballs + (6 * pf.overs)).to_f / pf.wickets.to_f if pf.wickets > 0
+        pf.strikerate = (pf.oddballs + (6 * pf.overs)).to_f / pf.wickets if pf.wickets.positive?
 
         # Parse overs and odd balls into useful numbers
         ballsdelivered  = oddballs + (6 * overs)
         remainder       = ballsdelivered % 6
         overs_float     = ballsdelivered.to_f / 6
         overs_string    = overs_float.floor.to_s
-        overs_string += '.' + remainder.to_s unless remainder == 0
+        overs_string += ".#{remainder}" unless remainder.zero?
 
-        if wickets > 0
-          bowl_average      = runsconceded.to_f / wickets.to_f
+        if wickets.positive?
+          bowl_average      = runsconceded.to_f / wickets
           pf.average        = bowl_average
-          bowl_strikerate   = ballsdelivered.to_f / wickets.to_f
+          bowl_strikerate   = ballsdelivered.to_f / wickets
           pf.cum_strikerate = bowl_strikerate
         end
 
-        pf.cum_economy = runsconceded.to_f / overs_float if overs_float > 0
+        pf.cum_economy = runsconceded.to_f / overs_float if overs_float.positive?
       end
 
       # -dprint '-fielding', :cyan # debug
@@ -401,12 +403,12 @@ class MatchTypePlayer
     mtp.balls            = balls
     mtp.fours            = fours
     mtp.sixes            = sixes
-    mtp.bat_average      = bat_average     if completed > 0
-    mtp.bat_strikerate   = bat_strikerate  if balls > 0
+    mtp.bat_average      = bat_average     if completed.positive?
+    mtp.bat_strikerate   = bat_strikerate  if balls.positive?
     # -dprint '-batting2', :cyan # debug
 
     # Rationalise overs and odd balls
-    if ballsdelivered > 0
+    if ballsdelivered.positive?
       overs     = (ballsdelivered / 6).floor.to_i
       oddballs  = ballsdelivered % 6
     end
@@ -418,9 +420,9 @@ class MatchTypePlayer
     mtp.maidens          = maidens
     mtp.runsconceded     = runsconceded
     mtp.wickets          = wickets
-    mtp.bowl_average     = bowl_average                    if wickets > 0
-    mtp.bowl_strikerate  = bowl_strikerate                 if wickets > 0
-    mtp.economy          = runsconceded.to_f / overs_float if overs_float > 0
+    mtp.bowl_average     = bowl_average                    if wickets.positive?
+    mtp.bowl_strikerate  = bowl_strikerate                 if wickets.positive?
+    mtp.economy          = runsconceded.to_f / overs_float if overs_float.positive?
     # -dprint '-bowling2', :cyan # debug
 
     # Overall fielding

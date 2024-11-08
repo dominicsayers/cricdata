@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'net/http'
 require 'mongo'
-require "#{Rails.root.join('app/helpers/console_log')}"
-require "#{Rails.root.join('app/helpers/fetch')}"
+require Rails.root.join('app/helpers/console_log').to_s
+require Rails.root.join('app/helpers/fetch').to_s
 
 include ConsoleLog
 include Fetch
@@ -14,7 +16,7 @@ namespace :migrate do
       $\ = ' '
 
       #			Performance.where(:player_id.exists => false).each do |pf|
-      Performance.where(:runs.exists => true).each do |pf|
+      Performance.where(:runs.exists => true).find_each do |pf|
         # Update performance player
         dprint pf.inning_id
         dprint pf.name
@@ -30,7 +32,7 @@ namespace :migrate do
           score = IndividualScore.where(type_number: pf.type_number, runs: pf.runs).first
 
           # Is this a later (or the last) performance of this score?
-          if score.latest_date.blank? or pf.date_start > score.latest_date
+          if score.latest_date.blank? || (pf.date_start > score.latest_date)
             dprint pf.date_start, :cyan
             score.latest_name  = pf.name
             score.latest_date  = pf.date_start
@@ -48,14 +50,14 @@ namespace :migrate do
       $\ = ' '
 
       # Zero the frequency counters
-      IndividualScore.all.each do |score|
+      IndividualScore.find_each do |score|
         dprint score._id
         score.frequency = 0
         score.notouts = 0
         score.save
       end
 
-      Performance.where(:runs.exists => true).each do |pf|
+      Performance.where(:runs.exists => true).find_each do |pf|
         # Update performance player
         dprint pf.inning_id
         dprint pf.name
@@ -65,7 +67,7 @@ namespace :migrate do
           dprint pf.runs
           score = IndividualScore.where(type_number: pf.type_number, runs: pf.runs).first
 
-          if score.latest_date == pf.date_start and score.latest_name == pf.name
+          if (score.latest_date == pf.date_start) && (score.latest_name == pf.name)
             score.latest_player_id = pf.player_id
             dprint score.latest_player_id, :green
           end
@@ -115,7 +117,7 @@ namespace :migrate do
       # Add match type, start date and player's name to performances
       # rake db:mongoid:create_indexes RAILS_ENV=test
 
-      Performance.where(:runs.exists => true, :type_number.exists => false).each do |pf|
+      Performance.where(:runs.exists => true, :type_number.exists => false).find_each do |pf|
         dprint pf.type_number, :red
         dprint pf.runs
         dprint pf.inning_id
@@ -143,7 +145,7 @@ namespace :migrate do
       IndividualScore.destroy_all
 
       # Seed the benchmark scores
-      for type_number in 1..3
+      (1..3).each do |type_number|
         score	= IndividualScore.find_or_create_by type_number: type_number, runs: 0
         score.unscored                  = true
         score.current_lowest_unscored   = true
@@ -202,7 +204,7 @@ namespace :migrate do
 
       # Re-update all mtps to add full name and correct T20I stats
       # Also adds Player documents
-      MatchTypePlayer.all.update_all(dirty: true)
+      MatchTypePlayer.update_all(dirty: true)
       MatchTypePlayer.update_dirty_players
     end
   end
@@ -246,11 +248,11 @@ namespace :migrate do
       # Players
       dputs 'MatchTypePlayers', :white
 
-      MatchTypePlayer.where(:match_type_player_id.exists => true).each do |mtp|
+      MatchTypePlayer.where(:match_type_player_id.exists => true).find_each do |mtp|
         mtp.player_ref = mtp._id
         dprint mtp.name, :cyan
 
-        MatchType.all.each do |match_type|
+        MatchType.find_each do |match_type|
           new_mtp	= MatchTypePlayer.find_or_create_by type_number: match_type.type_number, player_ref: mtp._id
           new_mtp.name		= mtp.name
           new_mtp.dirty	= mtp.dirty
@@ -265,7 +267,7 @@ namespace :migrate do
       # Matches
       dputs 'Matches', :white
 
-      Match.all.each do |match|
+      Match.find_each do |match|
         match.match_ref = match._id
         match.unset :match_id
         dprint match.match_ref, :cyan
@@ -277,7 +279,7 @@ namespace :migrate do
       # Raw matches
       dputs 'Raw matches', :white
 
-      RawMatch.all.each do |raw_match|
+      RawMatch.find_each do |raw_match|
         raw_match.match_ref = raw_match._id
         raw_match.unset :match_id
         dprint raw_match.match_ref, :cyan
@@ -289,7 +291,7 @@ namespace :migrate do
       # Grounds
       dputs 'Grounds', :white
 
-      Ground.all.each do |ground|
+      Ground.find_each do |ground|
         ground.ground_ref = ground._id
         ground.unset :ground_id
         dprint ground.ground_ref, :cyan
@@ -301,7 +303,7 @@ namespace :migrate do
       # Match types
       dputs 'Match types', :white
 
-      MatchType.all.each do |match_type|
+      MatchType.find_each do |match_type|
         match_type.type_number = match_type._id
         match_type.unset :type_id
         dprint match_type.name, :cyan
@@ -318,7 +320,7 @@ namespace :migrate do
       $\ = ' '
       $, = '/'
 
-      Match.where(:date_end.exists => false).each do |match|
+      Match.where(:date_end.exists => false).find_each do |match|
         # -dprint '+', :cyan # debug
         match_ref = match.match_ref
         dprint match_ref # debug
@@ -362,7 +364,7 @@ namespace :migrate do
     task deflate_raw_matches: :environment do
       $\ = ' '
 
-      RawMatch.where(:html.exists => true).each do |raw_match|
+      RawMatch.where(:html.exists => true).find_each do |raw_match|
         zhtml = Zlib::Deflate.deflate(raw_match.html)
         dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
         raw_match.zhtml = BSON::Binary.new(zhtml)

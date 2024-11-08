@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Raw match HTML from the source
 class RawMatch
   include Mongoid::Document

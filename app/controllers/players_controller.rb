@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PlayersController < ApplicationController
   include ConsoleLog
 
@@ -16,11 +18,11 @@ class PlayersController < ApplicationController
         players = Player.where(master_ref: @slug)
       else
         players = Player.where(slug: @slug)
-        players = Player.where(slug: /^#{@slug}/) if players.length == 0
+        players = Player.where(slug: /^#{@slug}/) if players.empty?
       end
     end
 
-    if players.length == 0
+    if players.empty?
       @message = { error: 'No matching players' }
 
       respond_to do |format|
@@ -65,7 +67,7 @@ class PlayersController < ApplicationController
     dp params # debug
     match_types = MatchType.where(name: /#{permitted[:match_type_name]}/i)
 
-    if match_types.length == 0
+    if match_types.empty?
       respond_to do |format|
         format.html { render 'match_types/unrecognised' }
       end

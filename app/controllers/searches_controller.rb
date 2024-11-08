@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SearchesController < ApplicationController
   # GET /searches
   # GET /searches.json
@@ -59,7 +61,7 @@ class SearchesController < ApplicationController
     @search = Search.find(params[:id])
 
     respond_to do |format|
-      if @search.update_attributes(params[:search])
+      if @search.update(params[:search])
         format.html { redirect_to @search, notice: 'Search was successfully updated.' }
         format.json { head :ok }
       else

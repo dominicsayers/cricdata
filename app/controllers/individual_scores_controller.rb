@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class IndividualScoresController < ApplicationController
   include ConsoleLog
 
@@ -6,7 +8,7 @@ class IndividualScoresController < ApplicationController
   def parse_match_type
     match_types = MatchType.where(name: /#{params[:match_type_name]}/i)
 
-    if match_types.length == 0
+    if match_types.empty?
       respond_to do |format|
         format.html { render 'match_types/unrecognised' }
       end

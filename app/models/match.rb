@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 
 class Match
@@ -37,7 +39,7 @@ class Match
 
     nodeset.each do |inning_header_node|
       # Gather the column headings: R M B 4s 6s SR etc. (or O M R W for bowling stats)
-      text = inning_header_node.children.length == 0 ? :Extras : inning_header_node.children.first.text
+      text = inning_header_node.children.empty? ? :Extras : inning_header_node.children.first.text
       text = :Extras if text.nil?
       template << text.to_sym
     end
@@ -55,7 +57,7 @@ class Match
 
   # Helpers
   def self.parse(match_ref = 0)
-    @match = where(match_ref: match_ref.to_s).first unless match_ref == 0
+    @match = where(match_ref: match_ref.to_s).first unless match_ref.zero?
 
     return false if @match.nil?
 
@@ -67,7 +69,7 @@ class Match
     raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
     # -dp raw_match, :cyan # debug
 
-    if recent_match or raw_match.match_json.blank?
+    if recent_match || raw_match.match_json.blank?
       url = 'https://www.espncricinfo.com/ci/engine/match/%s.json' % match_ref
       raw_match.match_json = get_response(url)
       url += '?view=scorecard'
@@ -131,7 +133,7 @@ class Match
         i = match_teams.index batting_team
 
         unless i.nil?
-          innings_teams[inning_number] = {} unless innings_teams.has_key? inning_number
+          innings_teams[inning_number] = {} unless innings_teams.key? inning_number
           innings_teams[inning_number][:batting] = i
           innings_teams[inning_number][:bowling] = 1 - i
         end
@@ -146,7 +148,7 @@ class Match
 
       inning_nodeset.each do |inning_node|
         # If it isn't headed XXX [nth] Innings then ignore it
-        next unless innings_teams.has_key? inning_number
+        next unless innings_teams.key? inning_number
 
         dputs "Parsing innings #{inning_number}...", :white
 
@@ -195,7 +197,7 @@ class Match
 
       inning_nodeset.each do |inning_node|
         # If it isn't headed XXX [nth] Innings then ignore it
-        next unless innings_teams.has_key? inning_number
+        next unless innings_teams.key? inning_number
 
         classattr   = inning_node.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
@@ -219,17 +221,14 @@ class Match
         end
       end
 
-      stats[inning_number][borb] << pf unless pf == {} # save current performance hash
-    end
+      stats[inning_number][borb] << pf unless pf == {}
 
-    # -dputs stats, :white # debug
+      # -dputs stats, :white # debug
 
-    # Now we have the stats gathered into a hash, we can parse out the
-    # players' performmances
-    for inning_number in 1..4
-      # -dp stats, :blue # debug
-      break unless stats.has_key? inning_number
-      break unless stats[inning_number].has_key? :batting
+      # Now we have the stats gathered into a hash, we can parse out the
+      # players' performmances
+      break unless stats.key? inning_number
+      break unless stats[inning_number].key? :batting
 
       if stats[inning_number][:batting].empty?
         inning_number > 2 ? break : next
@@ -243,7 +242,7 @@ class Match
       # Batting
       stats[inning_number][:batting].each do |p|
         dp p, :white # debug
-        if p[:ref] == 0
+        if (p[:ref]).zero?
           # Record innings analysis
           if p[:name] && p[:name].downcase == 'extras'
             inning.extras          = p[:R]
@@ -329,7 +328,7 @@ class Match
     end
 
     # Wrap up
-    @match.parsed = (@match.date_end < Date.today) # Only count completed matches as parsed
+    @match.parsed = (@match.date_end < Time.zone.today) # Only count completed matches as parsed
     @match.save
 
     dputs "Match #{match_ref} parsed", :green

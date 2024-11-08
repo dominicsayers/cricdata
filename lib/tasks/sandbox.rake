@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'net/http'
 require 'mongo'
-require "#{Rails.root.join('app/helpers/console_log')}"
-require "#{Rails.root.join('app/helpers/fetch')}"
+require Rails.root.join('app/helpers/console_log').to_s
+require Rails.root.join('app/helpers/fetch').to_s
 
 include ConsoleLog
 include Fetch
@@ -19,7 +21,7 @@ namespace :sandbox do
   task fixup_performances: :environment do
     $\ = ' '
 
-    Performance.where(:type_number.exists => false).each do |pf|
+    Performance.where(:type_number.exists => false).find_each do |pf|
       dprint pf.match_type_player_id
       dprint pf.inning_id
 
@@ -74,9 +76,9 @@ namespace :sandbox do
   task initials: :environment do
     $\ = ' '
 
-    Player.where(:name.exists => true).each do |player|
+    Player.where(:name.exists => true).find_each do |player|
       initials = player.slug.split('-').first
-      forename = player.fullname.split(' ').first.downcase
+      forename = player.fullname.split.first.downcase
 
       next unless initials != forename
 
@@ -129,7 +131,7 @@ namespace :sandbox do
   task match_age: :environment do
     $\ = ' '
 
-    Match.all.each do |match|
+    Match.find_each do |match|
       dprint match.serial
       dprint match.date_end
       dprint 1.week.ago.to_date
@@ -141,7 +143,7 @@ namespace :sandbox do
     $\ = ' '
 
     # Mark all players dirty
-    MatchTypePlayer.all.update_all(dirty: true)
+    MatchTypePlayer.update_all(dirty: true)
 
     # Update players without refetching fielding data
     MatchTypePlayer.dirty.each do |mtp|
@@ -154,7 +156,7 @@ namespace :sandbox do
 
     Performance.destroy_all
 
-    Match.all.each do |match|
+    Match.find_each do |match|
       match_ref = match.match_ref
       dputs match_ref, :white # debug
       # Get match data
@@ -178,7 +180,7 @@ namespace :sandbox do
 
       inning_nodeset.each do |inning_node|
         inning_header_nodeset = inning_node.xpath('td/b')
-        stats_template[inning_number] = { batting: [], bowling: [] } unless stats_template.has_key? inning_number
+        stats_template[inning_number] = { batting: [], bowling: [] } unless stats_template.key? inning_number
         # -dputs borb
         # -dputs "Innings #{inning_number}"
 
@@ -186,7 +188,7 @@ namespace :sandbox do
           # Gather the column headings: R M B 4s 6s SR etc.
           # -dp inning_header_node, :pink
           # -dputs inning_header_node.children.length, :pink
-          text = inning_header_node.children.length == 0 ? :Extras : inning_header_node.children.first.text
+          text = inning_header_node.children.empty? ? :Extras : inning_header_node.children.first.text
           text = :Extras if text.nil?
           stats_template[inning_number][borb] << text.to_sym
         end
@@ -215,7 +217,7 @@ namespace :sandbox do
         firstchild    = inning_node.children.first
         text          = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
 
-        stats[inning_number] = { batting: [], bowling: [] } unless stats.has_key? inning_number
+        stats[inning_number] = { batting: [], bowling: [] } unless stats.key? inning_number
 
         case classname.to_sym
         when :playerName
@@ -226,7 +228,7 @@ namespace :sandbox do
           href          = '/ci/content/player/'
           href_len      = href.length
           href          = player_node.attributes['href'].value
-          pf            = { name: player_node.children.first.content, ref: href[href_len..-1].split('.').first }
+          pf            = { name: player_node.children.first.content, ref: href[href_len..].split('.').first }
           stats_counter = 0
         when :inningsDetails
           stats[inning_number][borb] << pf unless pf == {} # save current performance hash
@@ -265,8 +267,8 @@ namespace :sandbox do
 
       # Now we have the stats gathered into a hash, we can parse out the
       # players' performmances
-      for inning_number in 1..4
-        break unless stats.has_key? inning_number
+      (1..4).each do |inning_number|
+        break unless stats.key? inning_number
 
         inning      = match.innings.find_or_create_by inning_number: inning_number
         type_number = match.match_type.type_number
@@ -274,7 +276,7 @@ namespace :sandbox do
         # Batting
         stats[inning_number][:batting].each do |p|
           dp p, :white
-          if p[:ref] == 0
+          if (p[:ref]).zero?
             # Record innings analysis
             if p[:name].downcase == 'extras'
               inning.extras          = p[:runs]
@@ -358,7 +360,7 @@ namespace :sandbox do
   end
 
   task reparse_T20Is: :environment do
-    Match.where(match_type_id: '3').each do |match|
+    Match.where(match_type_id: '3').find_each do |match|
       match_ref = match.match_ref
       dputs match_ref, :white
       Match.parse match_ref
@@ -382,12 +384,10 @@ namespace :sandbox do
 
     Player.destroy_all
 
-    MatchTypePlayer.all.each do |mtp|
+    MatchTypePlayer.find_each do |mtp|
       mtp.unset(:player_id)
       mtp.unset(:player_ids)
-    end
 
-    MatchTypePlayer.all.each do |mtp|
       unless mtp.name.nil?
         dprint mtp.name, :white
         slug = mtp.name.parameterize
@@ -415,7 +415,7 @@ namespace :sandbox do
         player.save
 
         # Do all components of name too
-        nameparts = mtp.fullname.split(' ')
+        nameparts = mtp.fullname.split
 
         nameparts.each do |subslug|
           slug = subslug.parameterize
@@ -440,10 +440,10 @@ namespace :sandbox do
     zeroday = Match.min(:date_start).to_date
     dputs zeroday
 
-    MatchTypePlayer.all.each do |mtp|
+    MatchTypePlayer.find_each do |mtp|
       dprint mtp.name, :white
 
-      debut     = Date.today.to_date
+      debut     = Time.zone.today.to_date
       swansong  = zeroday
 
       mtp.performances.each do |pf|
@@ -465,7 +465,7 @@ namespace :sandbox do
   end
 
   task xfactor: :environment do
-    MatchTypePlayer.all.each do |mtp|
+    MatchTypePlayer.find_each do |mtp|
       next if mtp.bat_average.nil?
       next if mtp.bowl_average.nil?
 
@@ -500,7 +500,7 @@ namespace :sandbox do
   task match_dates: :environment do
     $\ = ' '
 
-    Match.all.each do |match|
+    Match.find_each do |match|
       match_ref = match.match_ref
       dprint match_ref # debug
       # Get match data
