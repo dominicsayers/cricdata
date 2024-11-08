@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SearchesController < ApplicationController
   # GET /searches
   # GET /searches.json
@@ -47,7 +49,7 @@ class SearchesController < ApplicationController
         format.html { redirect_to @search, notice: 'Search was successfully created.' }
         format.json { render json: @search, status: :created, location: @search }
       else
-        format.html { render action: "new" }
+        format.html { render action: 'new' }
         format.json { render json: @search.errors, status: :unprocessable_entity }
       end
     end
@@ -59,11 +61,11 @@ class SearchesController < ApplicationController
     @search = Search.find(params[:id])
 
     respond_to do |format|
-      if @search.update_attributes(params[:search])
+      if @search.update(params[:search])
         format.html { redirect_to @search, notice: 'Search was successfully updated.' }
         format.json { head :ok }
       else
-        format.html { render action: "edit" }
+        format.html { render action: 'edit' }
         format.json { render json: @search.errors, status: :unprocessable_entity }
       end
     end

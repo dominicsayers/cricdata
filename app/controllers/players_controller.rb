@@ -1,27 +1,29 @@
+# frozen_string_literal: true
+
 class PlayersController < ApplicationController
   include ConsoleLog
 
   # GET /players/1
   # GET /players/1.json
   def show
-dp params # debug
-    @slug = params[:id]
+    permitted = params.permit(:id, :format)
+    @slug = permitted[:id]
 
     begin
       # Look for player with this id
-      players       = Player.where(slug:@slug)
-    rescue
+      players = Player.where(id: BSON::ObjectId(@slug))
+    rescue StandardError
       # Couldn't find a matching player, so search by slug
       if /\d+/.match @slug
         players = Player.where(master_ref: @slug)
       else
         players = Player.where(slug: @slug)
-        players = Player.where(slug: /^#{@slug}/) if players.length == 0
+        players = Player.where(slug: /^#{@slug}/) if players.empty?
       end
     end
 
-    if players.length == 0
-      @message = {:error => 'No matching players'}
+    if players.empty?
+      @message = { error: 'No matching players' }
 
       respond_to do |format|
         format.html { render 'empty' }
@@ -32,12 +34,16 @@ dp params # debug
 
       # Collate all players found
       players.each do |player|
-        player_refs = player_refs | player.player_refs
+        player_refs |= player.player_refs
       end
+
+      # -dp player_refs, :pink # debug
 
       if player_refs.length == 1
         # Get canonical player (this may simply be a unique name part)
         @player = Player.where(master_ref: player_refs.first).first
+
+        # -dp @player, :blue # debug
 
         respond_to do |format|
           format.html # show.html.erb
@@ -56,11 +62,12 @@ dp params # debug
 
   # GET /players/test/xfactor
   # GET /players/test/xfactor.json
-	def xfactor
-dp params # debug
-    match_types = MatchType.where(name: /#{params[:match_type_name]}/i)
+  def xfactor
+    permitted = params.permit(:match_type_name)
+    # -dp params # debug
+    match_types = MatchType.where(name: /#{permitted[:match_type_name]}/i)
 
-    if match_types.length == 0
+    if match_types.empty?
       respond_to do |format|
         format.html { render 'match_types/unrecognised' }
       end
@@ -71,33 +78,33 @@ dp params # debug
       case type_number
       when MatchType::TEST
         @rubric = {
-          title:        'test matches',
-          clarification:'Post-war all-rounders in test matches',
-          qualification:'Qualification: 500 runs at better than 30 and 50 wickets at better than 35',
-          xfactor:      'X-factor: Batting ave. over 30 + bowling ave. under 35 + catches per match'
+          title: 'test matches',
+          clarification: 'Post-war all-rounders in test matches',
+          qualification: 'Qualification: 500 runs at better than 30 and 50 wickets at better than 35',
+          xfactor: 'X-factor: Batting ave. over 30 + bowling ave. under 35 + catches per match'
         }
       when MatchType::ODI
         @rubric = {
-          title:        'one-day internationals',
-          clarification:'All-rounders in one-day internationals',
-          qualification:'Qualification: 500 runs at better than 20 and 50 wickets',
-          xfactor:      'X-factor: Runs/100 balls (batting - bowling) + balls/wicket (batting - bowling) + catches per match'
+          title: 'one-day internationals',
+          clarification: 'All-rounders in one-day internationals',
+          qualification: 'Qualification: 500 runs at better than 20 and 50 wickets',
+          xfactor: 'X-factor: Runs/100 balls (batting - bowling) + balls/wicket (batting - bowling) + catches per match'
         }
       when MatchType::T20I
         @rubric = {
-          title:        'Twenty20 internationals',
-          clarification:'All-rounders in Twenty20 internationals',
-          qualification:'Qualification: 150 runs at better than 10 and 15 wickets',
-          xfactor:      'X-factor: Runs/100 balls (batting - bowling) + balls/wicket (batting - bowling) + catches per match'
+          title: 'Twenty20 internationals',
+          clarification: 'All-rounders in Twenty20 internationals',
+          qualification: 'Qualification: 150 runs at better than 10 and 15 wickets',
+          xfactor: 'X-factor: Runs/100 balls (batting - bowling) + balls/wicket (batting - bowling) + catches per match'
         }
       end
 
-			@mtps = MatchTypePlayer.xfactory.where(type_number: type_number)
+      @mtps = MatchTypePlayer.xfactory.where(type_number: type_number)
 
-			respond_to do |format|
-				format.html { render 'match_type_players/xfactor'}
-				format.json { render json: @mtps }
-			end
+      respond_to do |format|
+        format.html { render 'match_type_players/xfactor' }
+        format.json { render json: @mtps }
+      end
     end
-	end
+  end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MatchType
   include Mongoid::Document
 
@@ -7,16 +9,16 @@ class MatchType
   T20I  = 3
 
   # Fields
-  field :type_number, :type => Integer
-  field :name,        :type => String
+  field :type_number, type: Integer
+  field :name,        type: String
 
-#  key :type_number
-  index({ type_number:1 }, { unique:true })
+  #  key :type_number
+  index({ type_number: 1 }, { unique: true })
 
   # Validations
 
   # Scopes
 
   # Relationships
-  has_many :matches
+  has_many :matches, dependent: :restrict_with_exception
 end

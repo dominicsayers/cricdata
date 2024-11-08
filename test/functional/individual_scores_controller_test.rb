@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
-class IndividualScoresControllerTest < ActionController::TestCase
+class IndividualScoresControllerTest < ActionDispatch::IntegrationTest
   # test "the truth" do
   #   assert true
   # end

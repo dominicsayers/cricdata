@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Cricdata::Application.configure do
   # Settings specified here will take precedence over those in config/application.rb
 
@@ -26,5 +28,10 @@ Cricdata::Application.configure do
   config.assets.compress = false
 
   # Expands the lines which load the assets
-#  config.assets.debug = true
+  #  config.assets.debug = true
+  config.eager_load = false
+
+  config.active_support.to_time_preserves_timezone = :zone
+
+  config.generators.apply_rubocop_autocorrect_after_generate!
 end

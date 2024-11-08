@@ -1,0 +1,49 @@
+require:
+  - rubocop-rails
+  - rubocop-rake
+
+AllCops:
+  NewCops: enable
+  TargetRailsVersion: 8.0
+  Exclude:
+    - 'db/**/*'
+    - 'config/**/*'
+    - 'script/**/*'
+    - 'bin/**/*'
+    - 'lib/tasks/migrate.rake'
+    - 'lib/tasks/sandbox.rake'
+
+# All these cops should be enabled but the legacy code can't comply with them
+# for now. Re-enable when opportunity permits some refactoring.
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+  Exclude:
+    - lib/tasks/**/*.rake
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Rails/I18nLocaleTexts:
+  Enabled: false
+
+Rake/Desc:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/MixinUsage:
+  Exclude:
+    - lib/tasks/**/*.rake
