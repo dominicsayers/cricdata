@@ -22,3 +22,7 @@ end
 # Javascript libs
 gem 'jquery-rails'
 gem 'modernizr-rails'
+
+group :test, :development do
+  gem 'rubocop'
+end
