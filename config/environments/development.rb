@@ -28,4 +28,6 @@ Cricdata::Application.configure do
   # Expands the lines which load the assets
 #  config.assets.debug = true
   config.eager_load = false
+
+  config.active_support.to_time_preserves_timezone = :zone
 end

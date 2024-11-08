@@ -4,28 +4,28 @@ class Match
   include Mongoid::Document
 
   # Fields
-  field :match_ref,   :type => String
-  field :parsed,      :type => Boolean
-  field :serial,      :type => Integer
-  field :date_start,  :type => Date
-  field :date_end,    :type => Date
-  field :home_team,   :type => String
-  field :away_team,   :type => String
+  field :match_ref,   type: String
+  field :parsed,      type: Boolean
+  field :serial,      type: Integer
+  field :date_start,  type: Date
+  field :date_end,    type: Date
+  field :home_team,   type: String
+  field :away_team,   type: String
 
-#  key :match_ref
-  index({ match_ref:1 }, { unique:true })
+  #  key :match_ref
+  index({ match_ref: 1 }, { unique: true })
 
   # Validations
 
   # Scopes
-  scope :unparsed, ->{ where(:parsed.ne => true) }
+  scope :unparsed, -> { where(:parsed.ne => true) }
 
   # Relationships
   belongs_to :match_type, optional: true
   belongs_to :ground, optional: true
   has_many :innings
 
-  PLAYER_REF_PATH = "/ci/content/player/"
+  PLAYER_REF_PATH = '/ci/content/player/'
   PLAYER_REF_PATH_LENGTH = PLAYER_REF_PATH.length
 
   def to_s
@@ -42,65 +42,65 @@ class Match
       template << text.to_sym
     end
 
-    #-dputs template, :yellow # debug
-    return template
+    # -dputs template, :yellow # debug
+    template
   end
 
   def player_details_from(node)
     href = node.attributes['href'].value
-    ref = href.split("/").last.split(".").first.to_i
-    #-dp "#{node.children.first.content} (#{ref})", :blue # debug
-    return { name: node.children.first.content, ref: ref }
+    ref = href.split('/').last.split('.').first.to_i
+    # -dp "#{node.children.first.content} (#{ref})", :blue # debug
+    { name: node.children.first.content, ref: ref }
   end
 
   # Helpers
-  def self::parse match_ref=0
-    @match = self::where(match_ref: match_ref.to_s).first unless match_ref == 0
+  def self.parse(match_ref = 0)
+    @match = where(match_ref: match_ref.to_s).first unless match_ref == 0
 
     return false if @match.nil?
 
     match_ref = @match.match_ref
     recent_match = @match.date_end.blank? ? true : @match.date_end > 1.week.ago.to_date
-dputs "Parsing match #{match_ref}" # debug
+    dputs "Parsing match #{match_ref}" # debug
 
     # Get match data
     raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
-#-dp raw_match, :cyan # debug
+    # -dp raw_match, :cyan # debug
 
     if recent_match or raw_match.match_json.blank?
       url = 'https://www.espncricinfo.com/ci/engine/match/%s.json' % match_ref
       raw_match.match_json = get_response(url)
-      url += "?view=scorecard"
+      url += '?view=scorecard'
       raw_match.scorecard_html = get_response(url)
       raw_match.save
     end
 
     json = JSON.parse(raw_match.match_json)
-    match = json["match"]
-    match_teams = [match["team1_name"], match["team2_name"]]
+    match = json['match']
+    match_teams = [match['team1_name'], match['team2_name']]
 
     # dputs match, :pink # debug
 
     # Get date(s) and ground name
     @match.home_team   = match_teams[0]
     @match.away_team   = match_teams[1]
-    @match.date_start  = match["start_date_raw"].to_date
-    @match.date_end    = match["end_date_raw"].to_date
+    @match.date_start  = match['start_date_raw'].to_date
+    @match.date_end    = match['end_date_raw'].to_date
 
     # Match type - update collection
-    match_type        = MatchType.find_or_create_by(type_number: match["international_class_id"].to_i)
-    match_type.name   = match["international_class_name"]
+    match_type        = MatchType.find_or_create_by(type_number: match['international_class_id'].to_i)
+    match_type.name   = match['international_class_name']
     match_type.save
 
     # Ground - update collection
-    ground            = Ground.find_or_create_by(ground_ref: match["ground_id"].to_i)
-    ground.name       = match["ground_name"]
+    ground            = Ground.find_or_create_by(ground_ref: match['ground_id'].to_i)
+    ground.name       = match['ground_name']
     ground.save
 
     # Match details
     @match.match_type = match_type
     @match.ground     = ground
-    @match.serial     = match["international_number"].to_i
+    @match.serial     = match['international_number'].to_i
 
     doc = Nokogiri::HTML(raw_match.scorecard_html)
 
@@ -125,7 +125,7 @@ dputs "Parsing match #{match_ref}" # debug
       unless inning_description_nodeset.children.empty?
         inning_description = inning_description_nodeset.children.first.content
         /(.*?)(?: 1st| 2nd)* Innings/i.match(inning_description)
-        batting_team = $1
+        batting_team = ::Regexp.last_match(1)
 
         # Which team is bowling?
         i = match_teams.index batting_team
@@ -137,8 +137,7 @@ dputs "Parsing match #{match_ref}" # debug
         end
       end
 
-      dputs "Parsing innings #{inning_number}...", :white
-      stats[inning_number] = {:batting => [], :bowling => []}
+      stats[inning_number] = { batting: [], bowling: [] }
 
       # Innings (batting data)
       inning_nodeset  = inning_node.xpath("tr[@class='inningsRow']/td")
@@ -149,12 +148,14 @@ dputs "Parsing match #{match_ref}" # debug
         # If it isn't headed XXX [nth] Innings then ignore it
         next unless innings_teams.has_key? inning_number
 
+        dputs "Parsing innings #{inning_number}...", :white
+
         classattr   = inning_node.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
         firstchild  = inning_node.children.first
         text        = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
-  #-dputs classname, :cyan # debug
-  #-dputs text, :cyan # debug
+        # -dputs classname, :cyan # debug
+        # -dputs text, :cyan # debug
 
         case classname.to_sym
         when :playerName
@@ -162,7 +163,7 @@ dputs "Parsing match #{match_ref}" # debug
 
           # This is the next player, so start a new performance hash
           pf = @match.player_details_from(firstchild)
-          stats_counter  = 0
+          stats_counter = 0
         when :inningsDetails
           stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
@@ -172,9 +173,9 @@ dputs "Parsing match #{match_ref}" # debug
         when :battingDismissal
           pf[:howout]    = text
         when :battingRuns, :battingDetails
-          key            = stats_template[inning_number][borb][stats_counter]
-          stats_counter  += 1
-          pf[key]        = text
+          key = stats_template[inning_number][borb][stats_counter]
+          stats_counter += 1
+          pf[key] = text
         end
       end
 
@@ -200,8 +201,8 @@ dputs "Parsing match #{match_ref}" # debug
         classname   = classattr.nil? ? '' : classattr.value
         firstchild  = inning_node.children.first
         text        = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
-  #-dputs classname, :cyan # debug
-  #-dputs text, :cyan # debug
+        # -dputs classname, :cyan # debug
+        # -dputs text, :cyan # debug
 
         case classname.to_sym
         when :playerName
@@ -212,25 +213,25 @@ dputs "Parsing match #{match_ref}" # debug
           pf             = { name: player_details[:name], ref: player_details[:ref] }
           stats_counter = 0
         when :bowlingDetails
-          key           = stats_template[inning_number][borb][stats_counter]
+          key = stats_template[inning_number][borb][stats_counter]
           stats_counter += 1
-          pf[key]       = text
+          pf[key] = text
         end
       end
 
       stats[inning_number][borb] << pf unless pf == {} # save current performance hash
     end
 
-#-dputs stats, :white # debug
+    # -dputs stats, :white # debug
 
     # Now we have the stats gathered into a hash, we can parse out the
     # players' performmances
     for inning_number in 1..4
-      #-dp stats, :blue # debug
+      # -dp stats, :blue # debug
       break unless stats.has_key? inning_number
       break unless stats[inning_number].has_key? :batting
 
-      if stats[inning_number][:batting].empty? then
+      if stats[inning_number][:batting].empty?
         inning_number > 2 ? break : next
       end
 
@@ -241,7 +242,7 @@ dputs "Parsing match #{match_ref}" # debug
 
       # Batting
       stats[inning_number][:batting].each do |p|
-dp p, :white # debug
+        dp p, :white # debug
         if p[:ref] == 0
           # Record innings analysis
           if p[:name] && p[:name].downcase == 'extras'
@@ -252,7 +253,7 @@ dp p, :white # debug
           end
         elsif p[:howout].downcase.in?(['absent hurt', 'absent ill', 'absent'])
           # Not a performance so don't record anything
-          dputs p[:howout], :blue # debug
+          dputs p[:howout], :pink
         else
           # Make sure player exists
           mtp        = MatchTypePlayer.find_or_create_by type_number: type_number, player_ref: p[:ref]
@@ -287,7 +288,7 @@ dp p, :white # debug
       inning.batting_team = match_teams[innings_teams[inning_number][:batting]]
       inning.bowling_team = match_teams[innings_teams[inning_number][:bowling]]
       inning.save
-      #-dputs inning, :yellow # debug
+      # -dputs inning, :yellow # debug
 
       stats[inning_number][:bowling].each do |p|
         # Record bowling analysis
@@ -323,7 +324,7 @@ dp p, :white # debug
         performance.name          = p[:name]
 
         performance.save
-#-dp performance # debug
+        # -dp performance # debug
       end
     end
 
@@ -331,27 +332,28 @@ dp p, :white # debug
     @match.parsed = (@match.date_end < Date.today) # Only count completed matches as parsed
     @match.save
 
-    return true
+    dputs "Match #{match_ref} parsed", :green
+    true
   end
 
-  def self::parse_next
+  def self.parse_next
     # Find next unparsed match and parse it
-    @match = self::unparsed.first
-    self::parse
+    @match = unparsed.first
+    parse
   end
 
-  def self::parse_all
+  def self.parse_all
     # Parse all unparsed matches
-    self::where(parsed:false).sort(date_start: 1).each do |match|
+    where(parsed: false).sort(date_start: 1).each do |match|
       @match = match
-      self::parse
+      parse
     end
   end
 
-  def self::mark_all_unparsed
-    self::where(:parsed.ne => false).each do |match|
+  def self.mark_all_unparsed
+    where(:parsed.ne => false).each do |match|
       match.parsed = false
-dputs match.inspect # debug
+      dputs match.inspect # debug
       match.save
     end
   end

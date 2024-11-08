@@ -16,7 +16,6 @@ end
 
 require "bson"
 require "moped"
-Moped::BSON = BSON
 
 Mongoid.logger.level = Logger::WARN
 

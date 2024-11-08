@@ -4,7 +4,7 @@ Cricdata::Application.routes.draw do
   resources :players
 
   scope ':match_type_name', :constraints => {:match_type_name => /test|odi|t20i/} do
-    resources :players, :only => [:xfactor] do
+    resources :players, :only => [:show] do
       get 'xfactor', :on => :collection
     end
 
