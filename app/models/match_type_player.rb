@@ -150,7 +150,7 @@ class MatchTypePlayer
 
     # Process fielding data
     nodeset = doc.xpath('//tr[@class="data1"]')
-    lastmatch = 0
+    lastmatch = nil
 
     return false if nodeset.empty?
 
@@ -204,12 +204,12 @@ class MatchTypePlayer
           performance.catches       = subnodes[4].children.first.content
           performance.save
         else
-          dputs dismissals, :cyan
+          dprint '.', :cyan
         end
       end
     end
 
-    return if lastmatch.zero?
+    return unless lastmatch
 
     mtp.lastmatch = lastmatch
     mtp.save
@@ -279,16 +279,17 @@ class MatchTypePlayer
   #----------------------------------------------------------------------------
   # Update cumulative statistics from performance data
   def self.update_statistics(mtp, do_fielding: true)
+    # Process performance data
+    match_type_player_id = mtp._id
+    match_type_name = MatchType.find_by(type_number: mtp.type_number).name.downcase
+    dprint "Updating statistics for #{mtp.name} (#{match_type_name})", :white
+
     # Get fielding statistics
     if do_fielding
       get_fielding_statistics mtp
     else
       mtp.update_names
     end
-
-    # Process performance data
-    match_type_player_id = mtp._id
-    dprint "Updating statistics for #{mtp.name} (#{match_type_player_id})", :white
 
     performances = Performance.where(match_type_player_id: match_type_player_id)
 
@@ -332,6 +333,7 @@ class MatchTypePlayer
     # Examine performances
     performances.each do |pf|
       # -dp pf, :pink # debug
+      dprint '.', :green
       # Batting stats
       unless pf.runs.nil?
         # -dprint 'batting...', :cyan # debug
@@ -452,7 +454,7 @@ class MatchTypePlayer
     # Control
     mtp.dirty = false
     # -dputs mtp.inspect, :white # debug
-    dputs ' ✅'
+    dputs '✅'
     mtp.save
   end
 
