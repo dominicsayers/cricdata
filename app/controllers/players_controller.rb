@@ -5,7 +5,6 @@ class PlayersController < ApplicationController
   # GET /players/1.json
   def show
     permitted = params.permit(:id, :format)
-dp permitted # debug
     @slug = permitted[:id]
 
     begin

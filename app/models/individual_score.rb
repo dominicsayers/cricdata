@@ -46,6 +46,7 @@ $\ = ' ' # debug
     end
 
     max_runs    = score_max.runs
+#-dputs inning, :cyan # debug
 #-dprint runs, :cyan # debug
 #-dprint max_runs, :cyan # debug
 

@@ -48,7 +48,9 @@ class Match
 
   def player_details_from(node)
     href = node.attributes['href'].value
-    return { name: node.children.first.content, ref: href[PLAYER_REF_PATH_LENGTH..-1].split('.').first }
+    ref = href.split("/").last.split(".").first.to_i
+    #-dp "#{node.children.first.content} (#{ref})", :blue # debug
+    return { name: node.children.first.content, ref: ref }
   end
 
   # Helpers
@@ -135,7 +137,7 @@ dputs "Parsing match #{match_ref}" # debug
         end
       end
 
-      dputs "Processing innings #{inning_number}...", :white
+      dputs "Parsing innings #{inning_number}...", :white
       stats[inning_number] = {:batting => [], :bowling => []}
 
       # Innings (batting data)
@@ -159,8 +161,13 @@ dputs "Parsing match #{match_ref}" # debug
           stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
           # This is the next player, so start a new performance hash
-          player_details = @match.player_details_from(firstchild)
-          pf             = { name: player_details[:name], ref: player_details[:ref] }
+          pf = @match.player_details_from(firstchild)
+          stats_counter  = 0
+        when :inningsDetails
+          stats[inning_number][borb] << pf unless pf == {} # save current performance hash
+
+          # This is the innings summary, so start a new performance hash
+          pf = { ref: 0, name: text }
           stats_counter  = 0
         when :battingDismissal
           pf[:howout]    = text
@@ -168,9 +175,10 @@ dputs "Parsing match #{match_ref}" # debug
           key            = stats_template[inning_number][borb][stats_counter]
           stats_counter  += 1
           pf[key]        = text
-          pf[:ref]      = 0
         end
       end
+
+      pf[:ref] = 0 if !pf.empty? && pf[:ref].nil? # ensure ref is always present
 
       stats[inning_number][borb] << pf unless pf == {} # save current performance hash
 
@@ -218,12 +226,15 @@ dputs "Parsing match #{match_ref}" # debug
     # Now we have the stats gathered into a hash, we can parse out the
     # players' performmances
     for inning_number in 1..4
+      #-dp stats, :blue # debug
       break unless stats.has_key? inning_number
       break unless stats[inning_number].has_key? :batting
 
       if stats[inning_number][:batting].empty? then
         inning_number > 2 ? break : next
       end
+
+      dputs "Processing innings #{inning_number}", :white
 
       inning      = @match.innings.find_or_create_by inning_number: inning_number
       type_number = @match.match_type.type_number
@@ -234,7 +245,7 @@ dp p, :white # debug
         if p[:ref] == 0
           # Record innings analysis
           if p[:name] && p[:name].downcase == 'extras'
-            inning.extras          = p[:runs]
+            inning.extras          = p[:R]
             inning.extras_analysis = p[:howout]
           else
             inning.summary         = p[:howout]
@@ -276,6 +287,7 @@ dp p, :white # debug
       inning.batting_team = match_teams[innings_teams[inning_number][:batting]]
       inning.bowling_team = match_teams[innings_teams[inning_number][:bowling]]
       inning.save
+      #-dputs inning, :yellow # debug
 
       stats[inning_number][:bowling].each do |p|
         # Record bowling analysis
@@ -330,7 +342,7 @@ dp p, :white # debug
 
   def self::parse_all
     # Parse all unparsed matches
-    self::where(parsed:false).each do |match|
+    self::where(parsed:false).sort(date_start: 1).each do |match|
       @match = match
       self::parse
     end
