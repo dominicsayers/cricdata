@@ -25,7 +25,7 @@ class Match
   # Relationships
   belongs_to :match_type, optional: true
   belongs_to :ground, optional: true
-  has_many :innings
+  has_many :innings, dependent: :restrict_with_exception
 
   PLAYER_REF_PATH = '/ci/content/player/'
   PLAYER_REF_PATH_LENGTH = PLAYER_REF_PATH.length
@@ -70,7 +70,7 @@ class Match
     # -dp raw_match, :cyan # debug
 
     if recent_match || raw_match.match_json.blank?
-      url = 'https://www.espncricinfo.com/ci/engine/match/%s.json' % match_ref
+      url = format('https://www.espncricinfo.com/ci/engine/match/%<match_ref>s.json', match_ref: match_ref)
       raw_match.match_json = get_response(url)
       url += '?view=scorecard'
       raw_match.scorecard_html = get_response(url)
@@ -146,15 +146,15 @@ class Match
       pf              = {}
       stats_counter   = 0
 
-      inning_nodeset.each do |inning_node|
+      inning_nodeset.each do |inning_nodeset_item|
         # If it isn't headed XXX [nth] Innings then ignore it
         next unless innings_teams.key? inning_number
 
         dputs "Parsing innings #{inning_number}...", :white
 
-        classattr   = inning_node.attributes['class']
+        classattr   = inning_nodeset_item.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
-        firstchild  = inning_node.children.first
+        firstchild  = inning_nodeset_item.children.first
         text        = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
         # -dputs classname, :cyan # debug
         # -dputs text, :cyan # debug
@@ -195,13 +195,13 @@ class Match
       pf              = {}
       stats_counter   = 0
 
-      inning_nodeset.each do |inning_node|
+      inning_nodeset.each do |inning_nodeset_item|
         # If it isn't headed XXX [nth] Innings then ignore it
         next unless innings_teams.key? inning_number
 
-        classattr   = inning_node.attributes['class']
+        classattr   = inning_nodeset_item.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
-        firstchild  = inning_node.children.first
+        firstchild  = inning_nodeset_item.children.first
         text        = !firstchild.nil? && firstchild.text? ? firstchild.content.strip : ''
         # -dputs classname, :cyan # debug
         # -dputs text, :cyan # debug

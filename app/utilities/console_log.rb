@@ -8,10 +8,9 @@ module ConsoleLog
     when :green then 32
     when :yellow then 33
     when :blue then 34
-    when :pink then 35
     when :cyan then 36
     when :white then 37
-    else; 35
+    else; 35 # magenta (pink)
     end
   end
 

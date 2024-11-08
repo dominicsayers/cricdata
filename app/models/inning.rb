@@ -20,7 +20,7 @@ class Inning
 
   # Relationships
   belongs_to :match
-  has_many :performances
+  has_many :performances, dependent: :restrict_with_exception
 
   # Helpers
   def to_s

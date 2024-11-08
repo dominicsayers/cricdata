@@ -21,8 +21,8 @@ class Player
   # Scopes
 
   # Relationships
-  has_many :match_type_players
-  has_many :performances
+  has_many :match_type_players, dependent: :restrict_with_exception
+  has_many :performances, dependent: :restrict_with_exception
 
   # Helpers
 end

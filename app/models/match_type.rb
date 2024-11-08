@@ -20,5 +20,5 @@ class MatchType
   # Scopes
 
   # Relationships
-  has_many :matches
+  has_many :matches, dependent: :restrict_with_exception
 end

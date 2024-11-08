@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'net/http'
-require Rails.root.join('app/helpers/console_log').to_s
-require Rails.root.join('app/helpers/fetch').to_s
+require Rails.root.join('app/utilities/console_log').to_s
+require Rails.root.join('app/utilities/fetch').to_s
 
 include ConsoleLog
 include Fetch

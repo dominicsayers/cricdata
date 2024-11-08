@@ -32,4 +32,6 @@ Cricdata::Application.configure do
   config.eager_load = false
 
   config.active_support.to_time_preserves_timezone = :zone
+
+  config.generators.apply_rubocop_autocorrect_after_generate!
 end

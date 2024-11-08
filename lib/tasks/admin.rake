@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'net/http'
-require Rails.root.join('app/helpers/console_log').to_s
-require Rails.root.join('app/helpers/fetch').to_s
+require Rails.root.join('app/utilities/console_log').to_s
+require Rails.root.join('app/utilities/fetch').to_s
 
 include ConsoleLog
 include Fetch
@@ -13,13 +13,13 @@ namespace :admin do
     $\ = ' '
 
     dputs 'Marking all players as dirty...'
-    MatchTypePlayer.update_all(dirty: true)
+    MatchTypePlayer.update_all(dirty: true) # rubocop:disable Rails/SkipsModelValidations
     dputs 'done.'
   end
 
   task mark_indeterminate_players_dirty: :environment do
     dputs 'Marking all indeterminate players as dirty...'
-    MatchTypePlayer.indeterminate.update_all(dirty: true)
+    MatchTypePlayer.indeterminate.update_all(dirty: true) # rubocop:disable Rails/SkipsModelValidations
     dputs 'done.'
   end
 
@@ -52,7 +52,9 @@ namespace :admin do
 
         # Get fielding data
         url = format(
-          'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings', player_ref, type_number
+          'https://stats.espncricinfo.com/ci/engine/player/%<player_ref>s.json?class=%<type_number>s;template=results;type=fielding;view=innings',
+          player_ref: player_ref,
+          type_number: type_number
         )
         dputs ''
         doc = get_data url

@@ -15,7 +15,10 @@ class Search
   # Helpers
   def self.inspect_page(page)
     # Add any new matches on this page
-    url     = 'https://stats.espncricinfo.com/ci/engine/stats/index.json?class=11;page=%s;template=results;type=aggregate;view=results' % page
+    url = format(
+      'https://stats.espncricinfo.com/ci/engine/stats/index.json?class=11;page=%<page>s;template=results;type=aggregate;view=results',
+      page: page
+    )
     doc     = get_data(url)
     nodeset = doc.xpath('//a[text()="Match scorecard"]')
 

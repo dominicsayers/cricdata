@@ -2,8 +2,8 @@
 
 require 'net/http'
 require 'mongo'
-require Rails.root.join('app/helpers/console_log').to_s
-require Rails.root.join('app/helpers/fetch').to_s
+require Rails.root.join('app/utilities/console_log').to_s
+require Rails.root.join('app/utilities/fetch').to_s
 
 include ConsoleLog
 include Fetch
@@ -147,7 +147,7 @@ namespace :sandbox do
 
     # Update players without refetching fielding data
     MatchTypePlayer.dirty.each do |mtp|
-      MatchTypePlayer.update_statistics mtp, false
+      MatchTypePlayer.update_statistics mtp, do_fielding: false
     end
   end
 

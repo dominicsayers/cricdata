@@ -61,15 +61,17 @@ class MatchTypePlayer
 
   # Relationships
   belongs_to :player
-  has_many :performances
+  has_many :performances, dependent: :restrict_with_exception
 
   # Helpers
   #----------------------------------------------------------------------------
   # Get player data (including fielding performances)
-  def get_player_data
+  def player_data
     # Get fielding data
     url = format(
-      'https://stats.espncricinfo.com/ci/engine/player/%s.json?class=%s;template=results;type=fielding;view=innings', player_ref, type_number
+      'https://stats.espncricinfo.com/ci/engine/player/%<player_ref>s.json?class=%<type_number>s;template=results;type=fielding;view=innings',
+      player_ref: player_ref,
+      type_number: type_number
     )
     get_data url
   end
@@ -77,13 +79,13 @@ class MatchTypePlayer
   # Update names
   def update_names(doc = nil)
     if name.blank?
-      doc = get_player_data if doc.blank?
+      doc = player_data if doc.blank?
       self.name = doc.xpath('//h1[@class="SubnavSitesection"]').first.content.split("/\n")[2].strip
       save
     end
 
     if fullname.blank?
-      doc = get_player_data if doc.blank?
+      doc = player_data if doc.blank?
       scripts = doc.xpath('//script')
 
       scripts.each do |script|
@@ -134,13 +136,13 @@ class MatchTypePlayer
 
   # Get history of fielding performances
   def self.get_fielding_statistics(mtp)
-    match_type_player_id  = mtp._id
-    player_ref            = mtp.player_ref
+    match_type_player_id = mtp._id
+    mtp.player_ref
 
     # -dputs player_ref, :cyan # debug
 
     # Get fielding data
-    doc = mtp.get_player_data
+    doc = mtp.player_data
 
     # If player's basic details are incomplete then we can take
     # this opportunity to update them
@@ -176,36 +178,33 @@ class MatchTypePlayer
         matches         = Match.where(match_ref: match_ref)
         # -dprint matches.length, :pink # debug
 
-        if matches.empty?
-          dputs "Match #{match_ref} not found", :red
-          exit
+        raise RuntimeException, "Match #{match_ref} not found" if matches.empty?
+
+        match = matches.first
+        # -dp match, :cyan # debug
+
+        # Is this the player's debut match?
+        if mtp.firstmatch.nil?
+          mtp.firstmatch = match.date_start
+          mtp.save
+        end
+
+        lastmatch       = match.date_end
+        dismissals      = subnodes[0].children.first.content
+
+        if /\d+/.match(dismissals) # Ignore TDNF, DNF etc.
+          inning_number   = subnodes[5].children.first.content
+          inning          = match.innings.find_or_create_by inning_number: inning_number
+          performance     = inning.performances.find_or_create_by match_type_player_id: match_type_player_id
+
+          performance.dismissals    = dismissals
+          performance.catches_total = subnodes[1].children.first.content
+          performance.stumpings     = subnodes[2].children.first.content
+          performance.catches_wkt   = subnodes[3].children.first.content
+          performance.catches       = subnodes[4].children.first.content
+          performance.save
         else
-          match = matches.first
-          # -dp match, :cyan # debug
-
-          # Is this the player's debut match?
-          if mtp.firstmatch.nil?
-            mtp.firstmatch = match.date_start
-            mtp.save
-          end
-
-          lastmatch       = match.date_end
-          dismissals      = subnodes[0].children.first.content
-
-          if /\d+/.match(dismissals) # Ignore TDNF, DNF etc.
-            inning_number   = subnodes[5].children.first.content
-            inning          = match.innings.find_or_create_by inning_number: inning_number
-            performance     = inning.performances.find_or_create_by match_type_player_id: match_type_player_id
-
-            performance.dismissals    = dismissals
-            performance.catches_total = subnodes[1].children.first.content
-            performance.stumpings     = subnodes[2].children.first.content
-            performance.catches_wkt   = subnodes[3].children.first.content
-            performance.catches       = subnodes[4].children.first.content
-            performance.save
-          else
-            dputs dismissals, :cyan
-          end
+          dputs dismissals, :cyan
         end
       end
     end
@@ -226,7 +225,11 @@ class MatchTypePlayer
       case mtp.type_number
       when MatchType::TEST
         # -dprint 'Test' # debug
-        if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 50 || mtp.bowl_average > 35 || mtp.lastmatch < Date.new(1945)
+        if mtp.runs < 500 ||
+           mtp.bat_average < 30 ||
+           mtp.wickets < 50 ||
+           mtp.bowl_average > 35 ||
+           mtp.lastmatch < Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
         else
@@ -240,8 +243,13 @@ class MatchTypePlayer
           mtp.unset(:xfactor)
         else
           # ODI X-factor
-          #             Compare batting strikerate with economy        Compare balls faced per innings with bowling strikerate    Add catches per match
-          mtp.xfactor = mtp.bat_strikerate - (mtp.economy * 100 / 6) + (mtp.balls / mtp.completed) - mtp.bowl_strikerate + (mtp.catches / mtp.matchcount)
+          mtp.xfactor =
+            # Compare batting strikerate with economy
+            mtp.bat_strikerate - (mtp.economy * 100 / 6) +
+            # Compare balls faced per innings with bowling strikerate
+            (mtp.balls / mtp.completed) - mtp.bowl_strikerate +
+            # Add catches per match
+            (mtp.catches / mtp.matchcount)
         end
       when MatchType::T20I
         # -dprint 'T20I' # debug
@@ -250,15 +258,19 @@ class MatchTypePlayer
           mtp.unset(:xfactor)
         else
           # T20I X-factor
-          #             Compare batting strikerate with economy        Compare balls faced per innings with bowling strikerate    Add catches per match
-          mtp.xfactor = mtp.bat_strikerate - (mtp.economy * 100 / 6) + (mtp.balls / mtp.completed) - mtp.bowl_strikerate + (mtp.catches / mtp.matchcount)
+          mtp.xfactor =
+            # Compare batting strikerate with economy
+            mtp.bat_strikerate - (mtp.economy * 100 / 6) +
+            # Compare balls faced per innings with bowling strikerate
+            (mtp.balls / mtp.completed) - mtp.bowl_strikerate +
+            # Add catches per match
+            (mtp.catches / mtp.matchcount)
         end
       else
         dprint "Unknown match type: #{mtp.type_number}", :red
       end
     end
 
-    # -dprint "[#{mtp.matchcount}|#{mtp.runs}|#{mtp.bat_average}|#{mtp.wickets}|#{mtp.bowl_average}|#{mtp.catches}|#{mtp.bowl_strikerate}|#{mtp.economy}]", :pink # debug
     # -dputs mtp.xfactor.nil? ? 'X' : mtp.xfactor, :white # debug
 
     mtp.save
@@ -266,7 +278,7 @@ class MatchTypePlayer
 
   #----------------------------------------------------------------------------
   # Update cumulative statistics from performance data
-  def self.update_statistics(mtp, do_fielding = true)
+  def self.update_statistics(mtp, do_fielding: true)
     # Get fielding statistics
     if do_fielding
       get_fielding_statistics mtp
