@@ -83,7 +83,7 @@ class IndividualScore
       score.date_start  = date_start
     end
 
-    dp match_type_player, :pink # debug
+    # -dp match_type_player, :pink # debug
 
     # Is this a later (or the last) performance?
     if score.latest_date.blank? || (date_start > score.latest_date)

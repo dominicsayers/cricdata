@@ -56,8 +56,8 @@ class Match
   end
 
   # Helpers
-  def self.parse(match_ref = 0)
-    @match = where(match_ref: match_ref.to_s).first unless match_ref.zero?
+  def self.parse(match_ref = nil)
+    @match = where(match_ref: match_ref.to_s).first if match_ref
 
     return false if @match.nil?
 
@@ -150,7 +150,7 @@ class Match
         # If it isn't headed XXX [nth] Innings then ignore it
         next unless innings_teams.key? inning_number
 
-        dputs "Parsing innings #{inning_number}...", :white
+        dprint '.', :green
 
         classattr   = inning_nodeset_item.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
@@ -199,6 +199,8 @@ class Match
         # If it isn't headed XXX [nth] Innings then ignore it
         next unless innings_teams.key? inning_number
 
+        dprint '.', :yellow
+
         classattr   = inning_nodeset_item.attributes['class']
         classname   = classattr.nil? ? '' : classattr.value
         firstchild  = inning_nodeset_item.children.first
@@ -234,7 +236,7 @@ class Match
         inning_number > 2 ? break : next
       end
 
-      dputs "Processing innings #{inning_number}", :white
+      dputs "processing innings #{inning_number}", :green
 
       inning      = @match.innings.find_or_create_by inning_number: inning_number
       type_number = @match.match_type.type_number
@@ -331,7 +333,7 @@ class Match
     @match.parsed = (@match.date_end < Time.zone.today) # Only count completed matches as parsed
     @match.save
 
-    dputs "Match #{match_ref} parsed", :green
+    dputs "Match #{match_ref} parsed", :white
     true
   end
 
