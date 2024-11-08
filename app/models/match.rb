@@ -63,7 +63,7 @@ class Match
 
     match_ref = @match.match_ref
     recent_match = @match.date_end.blank? ? true : @match.date_end > 1.week.ago.to_date
-    dputs "Parsing match #{match_ref}" # debug
+    dputs "Parsing match #{match_ref}", :white
 
     # Get match data
     raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
@@ -241,7 +241,7 @@ class Match
 
       # Batting
       stats[inning_number][:batting].each do |p|
-        dp p, :white # debug
+        # -dp p, :white # debug
         if (p[:ref]).zero?
           # Record innings analysis
           if p[:name] && p[:name].downcase == 'extras'
@@ -352,7 +352,7 @@ class Match
   def self.mark_all_unparsed
     where(:parsed.ne => false).each do |match|
       match.parsed = false
-      dputs match.inspect # debug
+      # -dputs match.inspect # debug
       match.save
     end
   end

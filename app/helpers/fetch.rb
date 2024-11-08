@@ -2,13 +2,13 @@
 
 module Fetch
   def get_response(query)
-    dputs "Getting #{query}" # debug
+    # -dputs "Getting #{query}" # debug
     @attempts ||= 0
     @attempts += 1
     raise StandardError, 'Too many redirects' if @attempts > 10
 
     uri = URI.parse query
-    dputs uri # debug
+    # -dputs uri # debug
     case uri.scheme
     when 'https'
       connection              = Net::HTTP.new(uri.host, uri.port)
@@ -26,7 +26,7 @@ module Fetch
       response.body.force_encoding('UTF-8')
     when Net::HTTPRedirection
       location = response['location']
-      dputs 'Redirecting...' # debug
+      dputs 'Redirecting...'
       get_response(location) # recursion!
     else
       raise StandardError, "Status code #{response.code} received for request #{query}"

@@ -96,7 +96,7 @@ namespace :migrate do
         match_ref = pf.inning.match_id
 
         if match_ref == old_match_ref
-          dputs match_ref, :pink # debug
+          dputs match_ref, :pink
         else
           old_match_ref = match_ref
           dputs match_ref
@@ -179,7 +179,7 @@ namespace :migrate do
         inning = Inning.find pf['inning_id']
         mtp = MatchTypePlayer.find pf['match_type_player_id']
         IndividualScore.register inning, mtp, pf['runs'], pf['date_start']
-        dputs ' ' # debug
+        dputs ' '
       end
     end
   end
@@ -323,7 +323,7 @@ namespace :migrate do
       Match.where(:date_end.exists => false).find_each do |match|
         # -dprint '+', :cyan # debug
         match_ref = match.match_ref
-        dprint match_ref # debug
+        dprint match_ref
         # Get match data
         raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
@@ -338,7 +338,7 @@ namespace :migrate do
         # Parse dates
         title = doc.xpath('//title').first.children.first.content
         /.+?,\s(\w{3})\s([0-9]{1,2})(?:,\s([0-9]+))*(?:\s*(?:-)*\s*(\w{3})*\s*([0-9]{1,2}),\s([0-9]+))*/i.match(title)
-        dp Regexp.last_match(0), :pink # debug
+        # -dp Regexp.last_match(0), :pink # debug
         m1 = Regexp.last_match(1)
         d1 = Regexp.last_match(2)
         y1 = Regexp.last_match(3)
@@ -366,7 +366,7 @@ namespace :migrate do
 
       RawMatch.where(:html.exists => true).find_each do |raw_match|
         zhtml = Zlib::Deflate.deflate(raw_match.html)
-        dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+        # -dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
         raw_match.zhtml = BSON::Binary.new(zhtml)
         raw_match.unset :html
         raw_match.save

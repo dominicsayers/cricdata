@@ -37,13 +37,13 @@ class PlayersController < ApplicationController
         player_refs |= player.player_refs
       end
 
-      dp player_refs, :pink # debug
+      # -dp player_refs, :pink # debug
 
       if player_refs.length == 1
         # Get canonical player (this may simply be a unique name part)
         @player = Player.where(master_ref: player_refs.first).first
 
-        dp @player, :blue # debug
+        # -dp @player, :blue # debug
 
         respond_to do |format|
           format.html # show.html.erb
@@ -64,7 +64,7 @@ class PlayersController < ApplicationController
   # GET /players/test/xfactor.json
   def xfactor
     permitted = params.permit(:match_type_name)
-    dp params # debug
+    # -dp params # debug
     match_types = MatchType.where(name: /#{permitted[:match_type_name]}/i)
 
     if match_types.empty?

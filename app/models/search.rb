@@ -19,8 +19,6 @@ class Search
     doc     = get_data(url)
     nodeset = doc.xpath('//a[text()="Match scorecard"]')
 
-    $\ = ' ' # debug
-
     if nodeset.empty?
       dputs "Page #{page} has no matches", :red
       false # page not found

@@ -40,7 +40,7 @@ namespace :sandbox do
       pf.date_start   = match.date_start
       pf.type_number  = type_number
       pf.save
-      dputs ' ' # debug
+      dputs ' '
     end
   end
 
@@ -69,7 +69,7 @@ namespace :sandbox do
 
       Inning.find pf['inning_id']
 
-      dputs ' ' # debug
+      dputs ' '
     end
   end
 
@@ -117,7 +117,7 @@ namespace :sandbox do
       dprint pf['name']
 
       #			IndividualScore.register pf['type_number'], pf['runs'], pf['date_start'], pf['name']
-      dputs ' ' # debug
+      dputs ' '
     end
   end
 
@@ -158,7 +158,7 @@ namespace :sandbox do
 
     Match.find_each do |match|
       match_ref = match.match_ref
-      dputs match_ref, :white # debug
+      dputs match_ref, :white
       # Get match data
       raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
@@ -352,10 +352,10 @@ namespace :sandbox do
 
     raw_match = RawMatch.first
     zhtml = Zlib::Deflate.deflate(raw_match.html)
-    dp zhtml, :pink # debug
+    # -dp zhtml, :pink # debug
     dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
     raw_match.zhtml = BSON::Binary.new(zhtml)
-    dp raw_match.zhtml, :cyan # debug
+    # -dp raw_match.zhtml, :cyan # debug
     raw_match.save
   end
 
@@ -502,7 +502,7 @@ namespace :sandbox do
 
     Match.find_each do |match|
       match_ref = match.match_ref
-      dprint match_ref # debug
+      dprint match_ref
       # Get match data
       raw_match = RawMatch.find_or_create_by(match_ref: match_ref)
 
@@ -543,10 +543,10 @@ namespace :sandbox do
 
     raw_match = RawMatch.first
     zhtml = Zlib::Deflate.deflate(raw_match.html)
-    dp zhtml, :pink # debug
-    dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
+    # -dp zhtml, :pink # debug
+    # -dputs "#{raw_match._id} #{raw_match.html.length} #{zhtml.length}" # debug
     raw_match.zhtml = BSON::Binary.new(zhtml)
-    dp raw_match.zhtml, :cyan # debug
+    # -dp raw_match.zhtml, :cyan # debug
     raw_match.save
   end
 
@@ -554,7 +554,7 @@ namespace :sandbox do
     raw_match = RawMatch.first
     zhtml = raw_match.zhtml.to_s
     html = Zlib::Inflate.inflate(zhtml)
-    dputs "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
+    # -dputs "#{raw_match._id} #{raw_match.zhtml.length} #{raw_match.html.length}" # debug
     dputs html, :cyan
   end
 end

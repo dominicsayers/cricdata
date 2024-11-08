@@ -108,7 +108,7 @@ class MatchTypePlayer
     player.fullname   = fullname
     player.add_to_set(player_refs: player_ref)
     player.add_to_set(match_type_player_ids: _id)
-    dp player, :pink # debug
+    # -dp player, :pink # debug
     player.save!
 
     self.player = player
@@ -137,8 +137,7 @@ class MatchTypePlayer
     match_type_player_id  = mtp._id
     player_ref            = mtp.player_ref
 
-    $\ = ' ' # debug
-    dputs player_ref, :cyan # debug
+    # -dputs player_ref, :cyan # debug
 
     # Get fielding data
     doc = mtp.get_player_data
@@ -221,12 +220,12 @@ class MatchTypePlayer
   # Update X-factor from batting, bowling & fielding stats
   def self.update_xfactor(mtp)
     if mtp.matchcount.nil? || mtp.bat_average.nil? || mtp.bowl_average.nil?
-      dprint 'No average' # debug
+      # -dprint 'No average' # debug
       mtp.unset(:xfactor)
     else
       case mtp.type_number
       when MatchType::TEST
-        dprint 'Test' # debug
+        # -dprint 'Test' # debug
         if mtp.runs < 500 || mtp.bat_average < 30 || mtp.wickets < 50 || mtp.bowl_average > 35 || mtp.lastmatch < Date.new(1945)
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -235,7 +234,7 @@ class MatchTypePlayer
           mtp.xfactor = 5 + mtp.bat_average - mtp.bowl_average + (mtp.catches / mtp.matchcount)
         end
       when MatchType::ODI
-        dprint 'ODI' # debug
+        # -dprint 'ODI' # debug
         if mtp.runs < 500 || mtp.bat_average < 20 || mtp.wickets < 50
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -245,7 +244,7 @@ class MatchTypePlayer
           mtp.xfactor = mtp.bat_strikerate - (mtp.economy * 100 / 6) + (mtp.balls / mtp.completed) - mtp.bowl_strikerate + (mtp.catches / mtp.matchcount)
         end
       when MatchType::T20I
-        dprint 'T20I' # debug
+        # -dprint 'T20I' # debug
         if mtp.runs < 150 || mtp.bat_average < 10 || mtp.wickets < 15
           # Doesn't qualify
           mtp.unset(:xfactor)
@@ -259,8 +258,8 @@ class MatchTypePlayer
       end
     end
 
-    dprint "[#{mtp.matchcount}|#{mtp.runs}|#{mtp.bat_average}|#{mtp.wickets}|#{mtp.bowl_average}|#{mtp.catches}|#{mtp.bowl_strikerate}|#{mtp.economy}]", :pink # debug
-    dputs mtp.xfactor.nil? ? 'X' : mtp.xfactor, :white # debug
+    # -dprint "[#{mtp.matchcount}|#{mtp.runs}|#{mtp.bat_average}|#{mtp.wickets}|#{mtp.bowl_average}|#{mtp.catches}|#{mtp.bowl_strikerate}|#{mtp.economy}]", :pink # debug
+    # -dputs mtp.xfactor.nil? ? 'X' : mtp.xfactor, :white # debug
 
     mtp.save
   end
@@ -440,7 +439,7 @@ class MatchTypePlayer
 
     # Control
     mtp.dirty = false
-    dputs mtp.inspect, :white # debug
+    # -dputs mtp.inspect, :white # debug
     dputs ' ✅'
     mtp.save
   end

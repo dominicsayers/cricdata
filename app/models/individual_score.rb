@@ -33,8 +33,6 @@ class IndividualScore
   # Helpers
   # Register an individual score
   def self.register(inning, match_type_player, runs, date_start, notout)
-    $\ = ' ' # debug
-
     type_number = match_type_player.type_number
     score_max   = where(type_number: type_number).asc(:runs).last
 
@@ -62,13 +60,13 @@ class IndividualScore
           score.unscored = true
           score.save
         end
-        dprint max_runs, :pink # debug
+        # -dprint max_runs, :pink # debug
       end
 
       score.has_been_highest_score = true
       score.save
     end
-    dputs ' ' # debug
+    # -dputs ' ' # debug
 
     score           = find_or_create_by type_number: type_number, runs: runs
     score.unscored  = false # that's a given
@@ -113,11 +111,11 @@ class IndividualScore
       lu.current_lowest_unscored   = true
       lu.has_been_lowest_unscored  = true
       lu.save
-      dp lu # debug
+      # -dp lu # debug
     end
 
     # Save it
     score.save
-    dp score # debug
+    # -dp score # debug
   end
 end
