@@ -31,6 +31,6 @@ module ConsoleLog
   end
 
   def dprint(message, color = :yellow)
-    Rails.logger.debug { "\e[#{ansi color};1m#{message}\e[32;1m" }
+    print "\e[#{ansi color};1m#{message}\e[32;1m" # rubocop:disable Rails/Output
   end
 end
