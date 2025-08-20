@@ -136,7 +136,7 @@ GEM
     mini_portile2 (2.8.9)
     minitest (5.25.5)
     modernizr-rails (2.7.1)
-    mongo (2.21.2)
+    mongo (2.21.3)
       base64
       bson (>= 4.14.1, < 6.0.0)
     moped (1.5.3)
