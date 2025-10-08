@@ -2,7 +2,7 @@
 
 source 'http://rubygems.org'
 
-ruby '3.4.3'
+ruby '3.4.7'
 
 gem 'bson_ext'
 gem 'mongo'
