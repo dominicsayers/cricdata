@@ -85,7 +85,7 @@ GEM
     base64 (0.3.0)
     benchmark (0.5.0)
     bigdecimal (3.3.1)
-    bson (5.0.2)
+    bson (5.2.0)
     bson_ext (1.5.1)
     builder (3.3.0)
     cgi (0.5.0)
@@ -141,7 +141,7 @@ GEM
     mini_portile2 (2.8.9)
     minitest (5.26.2)
     modernizr-rails (2.7.1)
-    mongo (2.21.3)
+    mongo (2.22.0)
       base64
       bson (>= 4.14.1, < 6.0.0)
     moped (1.5.3)
