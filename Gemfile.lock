@@ -88,7 +88,7 @@ GEM
     bson (5.2.0)
     bson_ext (1.5.1)
     builder (3.3.0)
-    cgi (0.5.0)
+    cgi (0.5.1)
     coffee-rails (5.0.0)
       coffee-script (>= 2.2.0)
       railties (>= 5.2.0)
