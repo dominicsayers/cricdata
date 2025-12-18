@@ -145,7 +145,7 @@ GEM
       base64
       bson (>= 4.14.1, < 6.0.0)
     moped (1.5.3)
-    net-imap (0.6.0)
+    net-imap (0.6.1)
       date
       net-protocol
     net-pop (0.1.2)
