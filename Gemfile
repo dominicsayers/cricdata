@@ -9,7 +9,7 @@ gem 'mongo'
 gem 'mongoid', git: 'https://github.com/mongodb/mongoid'
 gem 'moped'
 gem 'nokogiri'
-gem 'rails', '~> 8.1.1'
+gem 'rails', '~> 8.1.2'
 gem 'rails_12factor'
 gem 'thin'
 
