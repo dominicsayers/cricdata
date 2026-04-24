@@ -104,7 +104,7 @@ GEM
     daemons (1.4.1)
     date (3.5.1)
     drb (2.2.3)
-    erb (6.0.2)
+    erb (6.0.4)
     erubi (1.13.1)
     eventmachine (1.2.7)
     eventmachine (1.2.7-x86-mingw32)
